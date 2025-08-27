@@ -287,7 +287,7 @@ namespace RCP {
 
     uint32_t millis() { return systime() - timeOffset; }
 
-    void sendOneFloat(const RCP_DeviceClass devclass, const uint8_t id, const float* value) {
+    void sendOneFloat(const RCP_DeviceClass devclass, const uint8_t id, float value) {
         uint32_t time = millis() - timeOffset;
         uint8_t data[11] = {0};
         data[0] = channel | 9;
@@ -297,7 +297,7 @@ namespace RCP {
         data[4] = time >> 8;
         data[5] = time;
         data[6] = id;
-        memcpy(data + 7, value, 4);
+        memcpy(data + 7, &value, 4);
         write(data, 11);
     }
 
