@@ -51,12 +51,12 @@ typedef enum {
     RCP_TEST_STOP = 0x10,
     RCP_TEST_PAUSE = 0x11,
     RCP_DEVICE_RESET = 0x12,
+    RCP_DEVICE_RESET_TIME = 0x13,
     RCP_DATA_STREAM_STOP = 0x20,
     RCP_DATA_STREAM_START = 0x21,
     RCP_TEST_QUERY = 0x30,
     RCP_HEARTBEATS_CONTROL = 0xF0
 } RCP_TestStateControlMode;
-
 
 typedef enum {
     RCP_TEST_RUNNING = 0x00,
@@ -65,22 +65,20 @@ typedef enum {
     RCP_TEST_PAUSED = 0x40,
     RCP_TEST_ESTOP = 0x60,
     RCP_TEST_STATE_MASK = 0x60,
+    RCP_DATA_STREAM_MASK = 0x80,
+    RCP_HEARTBEAT_TIME_MASK = 0x0F,
 } RCP_TestRunningState;
 
 typedef enum {
-    RCP_SIMPLE_ACTUATOR_READ = 0x00,
-    RCP_SIMPLE_ACTUATOR_ON = 0x40,
-    RCP_SIMPLE_ACTUATOR_OFF = 0x80,
+    RCP_SIMPLE_ACTUATOR_OFF = 0x00,
+    RCP_SIMPLE_ACTUATOR_ON = 0x80,
     RCP_SIMPLE_ACTUATOR_TOGGLE = 0xC0,
-    RCP_SIMPLE_ACTUATOR_STATE_MASK = 0xC0,
 } RCP_SimpleActuatorState;
 
 typedef enum {
-    RCP_STEPPER_QUERY_STATE = 0x00,
     RCP_STEPPER_ABSOLUTE_POS_CONTROL = 0x40,
     RCP_STEPPER_RELATIVE_POS_CONTROL = 0x80,
     RCP_STEPPER_SPEED_CONTROL = 0xC0,
-    RCP_STEPPER_CONTROL_MODE_MASK = 0xC0
 } RCP_StepperControlMode;
 
 typedef enum {
@@ -103,6 +101,15 @@ namespace RCP {
     static_assert(sizeof(PromptData) == 4, "PromptData size does not equal 4!");
 
     using PromptAcceptor = void (*)(const PromptData& promptData);
+
+    template<size_t NUM_FLOATS>
+    struct Floats {
+        float vals[NUM_FLOATS];
+    };
+
+    using Floats2 = Floats<2>;
+    using Floats3 = Floats<3>;
+    using Floats4 = Floats<4>;
 
     constexpr int SERIAL_BYTES_PER_LOOP = 20;
     constexpr int RCP_SERIAL_BUFFER_SIZE = 128;
@@ -137,27 +144,39 @@ namespace RCP {
     uint8_t getTestNum();
     uint32_t millis();
 
+    void sendOneFloat(RCP_DeviceClass devclass, uint8_t id, float value);
+
+    void sendTwoFloat(RCP_DeviceClass devclass, uint8_t id, const float value[2]);
+    inline void sendTwoFloat(RCP_DeviceClass devclass, uint8_t id, Floats2 floats) {
+        sendTwoFloat(devclass, id, floats.vals);
+    }
+
+    void sendThreeFloat(RCP_DeviceClass devclass, uint8_t id, const float value[3]);
+    inline void sendThreeFloat(RCP_DeviceClass devclass, uint8_t id, Floats3 floats) {
+        sendThreeFloat(devclass, id, floats.vals);
+    }
+
+    void sendFourFloat(RCP_DeviceClass devclass, uint8_t id, const float value[4]);
+    inline void sendFourFloat(RCP_DeviceClass devclass, uint8_t id, Floats4 floats) {
+        sendFourFloat(devclass, id, floats.vals);
+    }
+
     void write(const void* data, uint8_t length);
     uint8_t readAvail();
     uint8_t read();
     uint32_t systime();
 
-    void sendOneFloat(RCP_DeviceClass devclass, uint8_t id, float value);
-    void sendTwoFloat(RCP_DeviceClass devclass, uint8_t id, const float value[2]);
-    void sendThreeFloat(RCP_DeviceClass devclass, uint8_t id, const float value[3]);
-    void sendFourFloat(RCP_DeviceClass devclass, uint8_t id, const float value[4]);
+    RCP_SimpleActuatorState readSimpleActuator(uint8_t id);
+    RCP_SimpleActuatorState writeSimpleActuator(uint8_t id, RCP_SimpleActuatorState state);
 
-    void handleSimpleActuatorRead(uint8_t id);
-    void handleSimpleActuatorWrite(uint8_t id, RCP_SimpleActuatorState state);
+    Floats2 readStepper(uint8_t id);
+    Floats2 writeStepper(uint8_t id, RCP_StepperControlMode controlMode, float controlVal);
 
-    void handleStepperRead(uint8_t id);
-    void handleStepperWrite(uint8_t id, RCP_StepperControlMode controlMode, float controlVal);
+    float readAngledActuator(uint8_t id);
+    float writeAngledActuator(uint8_t id, float controlVal);
 
-    void handleAngledActuatorRead(uint8_t id);
-    void handleAngledActuatorWrite(uint8_t id, float controlVal);
-
-    void handleSensorRead(RCP_DeviceClass devclass, uint8_t id);
-    void handleSensorTare(RCP_DeviceClass devclass, uint8_t id, uint8_t dataChannel, float tareVal);
+    Floats4 readSensor(RCP_DeviceClass devclass, uint8_t id);
+    void writeSensorTare(RCP_DeviceClass devclass, uint8_t id, uint8_t dataChannel, float tareVal);
 
     void handleCustomData(const void* data, uint8_t length);
 } // namespace RCP

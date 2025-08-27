@@ -20,7 +20,6 @@
 #include "test.h"
 
 namespace RCP {
-
     RCP_Channel channel;
     Test::Procedure* ESTOP_PROC = new Test::Procedure();
 
@@ -38,6 +37,14 @@ namespace RCP {
     static PromptData promptdata;
     static RCP_PromptDataType lastType;
     static PromptAcceptor pacceptor;
+
+    inline void insertTimestamp(uint8_t* start) {
+        uint32_t time = systime();
+        start[0] = time >> 24;
+        start[1] = time >> 16;
+        start[2] = time >> 8;
+        start[3] = time;
+    }
 
     void init() {
         testNum = 0;
@@ -144,28 +151,45 @@ namespace RCP {
             }
 
             case RCP_DEVCLASS_SIMPLE_ACTUATOR:
-                if(pktlen == 1) handleSimpleActuatorRead(bytes[2]);
-                else handleSimpleActuatorWrite(bytes[2], static_cast<RCP_SimpleActuatorState>(bytes[3]));
+                RCP_SimpleActuatorState retstate = pktlen == 1
+                    ? readSimpleActuator(bytes[2])
+                    : writeSimpleActuator(bytes[2], static_cast<RCP_SimpleActuatorState>(bytes[3]));
+
+                uint8_t pkt[8];
+                pkt[0] = channel | 0x06;
+                pkt[1] = RCP_DEVCLASS_SIMPLE_ACTUATOR;
+                insertTimestamp(pkt + 2);
+                pkt[6] = bytes[2];
+                pkt[7] = retstate;
+                write(pkt, 8);
                 break;
 
             case RCP_DEVCLASS_STEPPER: {
-                if(pktlen == 1) handleStepperRead(bytes[2]);
+                Floats2 retstate;
+
+                if(pktlen == 1) retstate = readStepper(bytes[2]);
                 else {
                     auto ctlmode = static_cast<RCP_StepperControlMode>(bytes[3]);
                     float ctlval;
                     memcpy(&ctlval, bytes + 4, 4);
-                    handleStepperWrite(bytes[2], ctlmode, ctlval);
+                    retstate = writeStepper(bytes[2], ctlmode, ctlval);
                 }
+
+                sendTwoFloat(RCP_DEVCLASS_STEPPER, bytes[2], retstate);
                 break;
             }
 
             case RCP_DEVCLASS_ANGLED_ACTUATOR: {
-                if(pktlen == 1) handleAngledActuatorRead(bytes[2]);
+                float retstate;
+
+                if(pktlen == 1) retstate = readAngledActuator(bytes[2]);
                 else {
                     float val = 0;
                     memcpy(&val, bytes + 3, 4);
-                    handleAngledActuatorWrite(bytes[2], val);
+                    retstate = writeAngledActuator(bytes[2], val);
                 }
+
+                sendOneFloat(RCP_DEVCLASS_ANGLED_ACTUATOR, bytes[2], retstate);
                 break;
             }
 
@@ -178,22 +202,65 @@ namespace RCP {
             case RCP_DEVCLASS_PRESSURE_TRANSDUCER:
             case RCP_DEVCLASS_RELATIVE_HYGROMETER:
             case RCP_DEVCLASS_LOAD_CELL:
-            case RCP_DEVCLASS_BOOL_SENSOR:
+            case RCP_DEVCLASS_BOOL_SENSOR: {
+                if(pktlen == 1) {
+                    sendOneFloat(devclass, bytes[2], readSensor(devclass, bytes[2]).vals[0]);
+                }
 
-            case RCP_DEVCLASS_POWERMON:
-
-            case RCP_DEVCLASS_ACCELEROMETER:
-            case RCP_DEVCLASS_GYROSCOPE:
-            case RCP_DEVCLASS_MAGNETOMETER:
-
-            case RCP_DEVCLASS_GPS: {
-                if(pktlen == 1) handleSensorRead(devclass, bytes[2]);
                 else {
                     uint8_t channel = bytes[3];
                     float tareval;
                     memcpy(&tareval, bytes + 4, 4);
-                    handleSensorTare(devclass, bytes[2], channel, tareval);
+                    writeSensorTare(devclass, bytes[2], channel, tareval);
                 }
+
+                break;
+            }
+
+            case RCP_DEVCLASS_POWERMON: {
+                if(pktlen == 1) {
+                    sendTwoFloat(devclass, bytes[2], readSensor(devclass, bytes[2]).vals);
+                }
+
+                else {
+                    uint8_t channel = bytes[3];
+                    float tareval;
+                    memcpy(&tareval, bytes + 4, 4);
+                    writeSensorTare(devclass, bytes[2], channel, tareval);
+                }
+
+                break;
+            }
+
+            case RCP_DEVCLASS_ACCELEROMETER:
+            case RCP_DEVCLASS_GYROSCOPE:
+            case RCP_DEVCLASS_MAGNETOMETER: {
+                if(pktlen == 1) {
+                    sendThreeFloat(devclass, bytes[2], readSensor(devclass, bytes[2]).vals);
+                }
+
+                else {
+                    uint8_t channel = bytes[3];
+                    float tareval;
+                    memcpy(&tareval, bytes + 4, 4);
+                    writeSensorTare(devclass, bytes[2], channel, tareval);
+                }
+
+                break;
+            }
+
+            case RCP_DEVCLASS_GPS: {
+                if(pktlen == 1) {
+                    sendFourFloat(devclass, bytes[2], readSensor(devclass, bytes[2]).vals);
+                }
+
+                else {
+                    uint8_t channel = bytes[3];
+                    float tareval;
+                    memcpy(&tareval, bytes + 4, 4);
+                    writeSensorTare(devclass, bytes[2], channel, tareval);
+                }
+
                 break;
             }
 
@@ -292,10 +359,7 @@ namespace RCP {
         uint8_t data[11] = {0};
         data[0] = channel | 9;
         data[1] = devclass;
-        data[2] = time >> 24;
-        data[3] = time >> 16;
-        data[4] = time >> 8;
-        data[5] = time;
+        insertTimestamp(data + 2);
         data[6] = id;
         memcpy(data + 7, &value, 4);
         write(data, 11);
@@ -306,10 +370,7 @@ namespace RCP {
         uint8_t data[15] = {0};
         data[0] = channel | 13;
         data[1] = devclass;
-        data[2] = time >> 24;
-        data[3] = time >> 16;
-        data[4] = time >> 8;
-        data[5] = time;
+        insertTimestamp(data + 2);
         data[6] = id;
         memcpy(data + 7, value, 8);
         write(data, 15);
@@ -320,10 +381,7 @@ namespace RCP {
         uint8_t data[19] = {0};
         data[0] = channel | 17;
         data[1] = devclass;
-        data[2] = time >> 24;
-        data[3] = time >> 16;
-        data[4] = time >> 8;
-        data[5] = time;
+        insertTimestamp(data + 2);
         data[6] = id;
         memcpy(data + 7, value, 12);
         write(data, 19);
@@ -334,10 +392,7 @@ namespace RCP {
         uint8_t data[23] = {0};
         data[0] = channel | 21;
         data[1] = devclass;
-        data[2] = time >> 24;
-        data[3] = time >> 16;
-        data[4] = time >> 8;
-        data[5] = time;
+        insertTimestamp(data + 2);
         data[6] = id;
         memcpy(data + 7, value, 16);
         write(data, 23);
@@ -348,20 +403,32 @@ namespace RCP {
     [[gnu::weak]] uint8_t read() { return 0; }
     [[gnu::weak]] uint32_t systime() { return 0; }
 
-    [[gnu::weak]] void handleSimpleActuatorRead([[maybe_unused]] uint8_t id)  {}
-    [[gnu::weak]] void handleSimpleActuatorWrite([[maybe_unused]] uint8_t id,
-                                            [[maybe_unused]] RCP_SimpleActuatorState state) {}
+    [[gnu::weak]] RCP_SimpleActuatorState readSimpleActuator([[maybe_unused]] uint8_t id) { return {}; }
 
-    [[gnu::weak]] void handleStepperRead([[maybe_unused]] uint8_t id) {}
-    [[gnu::weak]] void handleStepperWrite([[maybe_unused]] uint8_t id, [[maybe_unused]] RCP_StepperControlMode controlMode,
-                                     [[maybe_unused]] float controlVal) {}
+    [[gnu::weak]] RCP_SimpleActuatorState writeSimpleActuator([[maybe_unused]] uint8_t id,
+                                                              [[maybe_unused]] RCP_SimpleActuatorState state) {
+        return {};
+    }
 
-    [[gnu::weak]] void handleAngledActuatorRead([[maybe_unused]] uint8_t id) {}
-    [[gnu::weak]] void handleAngledActuatorWrite([[maybe_unused]] uint8_t id, [[maybe_unused]] float controlVal) {}
+    [[gnu::weak]] Floats2 readStepper([[maybe_unused]] uint8_t id) { return {}; }
 
-    [[gnu::weak]] void handleSensorRead([[maybe_unused]] RCP_DeviceClass devclass, [[maybe_unused]] uint8_t id) {}
-    [[gnu::weak]] void handleSensorTare([[maybe_unused]] RCP_DeviceClass devclass, [[maybe_unused]] uint8_t id,
-                                   [[maybe_unused]] uint8_t dataChannel, [[maybe_unused]] float tareVal) {}
+    [[gnu::weak]] Floats2 writeStepper([[maybe_unused]] uint8_t id, [[maybe_unused]] RCP_StepperControlMode controlMode,
+                                       [[maybe_unused]] float controlVal) {
+        return {};
+    }
+
+    [[gnu::weak]] float readAngledActuator([[maybe_unused]] uint8_t id) { return 0; }
+
+    [[gnu::weak]] float writeAngledActuator([[maybe_unused]] uint8_t id, [[maybe_unused]] float controlVal) {
+        return 0;
+    }
+
+    [[gnu::weak]] Floats4 readSensor([[maybe_unused]] RCP_DeviceClass devclass, [[maybe_unused]] uint8_t id) {
+        return {};
+    }
+
+    [[gnu::weak]] void writeSensorTare([[maybe_unused]] RCP_DeviceClass devclass, [[maybe_unused]] uint8_t id,
+                                       [[maybe_unused]] uint8_t dataChannel, [[maybe_unused]] float tareVal) {}
 
     [[gnu::weak]] void handleCustomData([[maybe_unused]] const void* data, [[maybe_unused]] uint8_t length) {}
 
