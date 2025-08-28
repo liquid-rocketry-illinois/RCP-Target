@@ -19,6 +19,10 @@
 
 #include "test.h"
 
+#ifndef __GNUG__
+#error "This code uses GCC weak symbols, therefore a GCC compiler must be used"
+#endif
+
 namespace RCP {
     RCP_Channel channel;
     Test::Procedure* ESTOP_PROC = new Test::Procedure();
@@ -39,7 +43,7 @@ namespace RCP {
     static PromptAcceptor pacceptor;
 
     inline void insertTimestamp(uint8_t* start) {
-        uint32_t time = systime();
+        uint32_t time = millis();
         start[0] = time >> 24;
         start[1] = time >> 16;
         start[2] = time >> 8;
@@ -150,7 +154,7 @@ namespace RCP {
                 break;
             }
 
-            case RCP_DEVCLASS_SIMPLE_ACTUATOR:
+            case RCP_DEVCLASS_SIMPLE_ACTUATOR: {
                 RCP_SimpleActuatorState retstate = pktlen == 1
                     ? readSimpleActuator(bytes[2])
                     : writeSimpleActuator(bytes[2], static_cast<RCP_SimpleActuatorState>(bytes[3]));
@@ -163,6 +167,7 @@ namespace RCP {
                 pkt[7] = retstate;
                 write(pkt, 8);
                 break;
+            }
 
             case RCP_DEVCLASS_STEPPER: {
                 Floats2 retstate;
@@ -355,7 +360,6 @@ namespace RCP {
     uint32_t millis() { return systime() - timeOffset; }
 
     void sendOneFloat(const RCP_DeviceClass devclass, const uint8_t id, float value) {
-        uint32_t time = millis() - timeOffset;
         uint8_t data[11] = {0};
         data[0] = channel | 9;
         data[1] = devclass;
@@ -366,7 +370,6 @@ namespace RCP {
     }
 
     void sendTwoFloat(const RCP_DeviceClass devclass, const uint8_t id, const float value[2]) {
-        uint32_t time = millis() - timeOffset;
         uint8_t data[15] = {0};
         data[0] = channel | 13;
         data[1] = devclass;
@@ -377,7 +380,6 @@ namespace RCP {
     }
 
     void sendThreeFloat(const RCP_DeviceClass devclass, const uint8_t id, const float value[3]) {
-        uint32_t time = millis() - timeOffset;
         uint8_t data[19] = {0};
         data[0] = channel | 17;
         data[1] = devclass;
@@ -388,7 +390,6 @@ namespace RCP {
     }
 
     void sendFourFloat(const RCP_DeviceClass devclass, const uint8_t id, const float value[4]) {
-        uint32_t time = millis() - timeOffset;
         uint8_t data[23] = {0};
         data[0] = channel | 21;
         data[1] = devclass;
