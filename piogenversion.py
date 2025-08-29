@@ -1,3 +1,10 @@
+import os
+
+try:
+    os.remove("src/VERSION.cpp")
+except OSError:
+    pass
+
 ver = ""
 with open("VERSION", 'r') as file:
     ver = file.read()
@@ -17,4 +24,3 @@ lines = [
 
 with open("src/VERSION.cpp", 'w') as file:
     file.writelines(lines)
-
