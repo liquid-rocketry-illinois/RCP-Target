@@ -25,7 +25,7 @@
 
 namespace RCP {
     RCP_Channel channel;
-    Test::Procedure* ESTOP_PROC = new Test::Procedure();
+    Test::Procedure* ESTOP_PROC = nullptr;
 
     static LRI::RingBuf<uint8_t, RCP_SERIAL_BUFFER_SIZE> inbuffer;
 
@@ -33,6 +33,8 @@ namespace RCP {
     static RCP_TestRunningState testState;
     static bool dataStreaming;
     static bool ready = false;
+    static uint8_t heartbeatTime;
+    static uint32_t lastHeartbeatReceived;
 
     static bool firstTestRun;
     static bool initDone = false;
@@ -56,16 +58,21 @@ namespace RCP {
         dataStreaming = false;
         firstTestRun = false;
         initDone = true;
+        heartbeatTime = 0;
+        lastHeartbeatReceived = 0;
     }
 
     // The majority of RCP related functions
     void yield() {
         if(!initDone) return;
+
         // Read SERIAL_BYTES_PER_LOOP bytes into the buffer
         for(int i = 0; i < SERIAL_BYTES_PER_LOOP && readAvail(); i++) {
             uint8_t val = read();
             inbuffer.push(val);
         }
+
+        if(heartbeatTime != 0 && millis() - lastHeartbeatReceived > heartbeatTime) ESTOP();
 
         // Calculate the packet length from the header available in the buffer
         if(inbuffer.isEmpty()) return;
@@ -135,6 +142,11 @@ namespace RCP {
                     dataStreaming = (bytes[2] & 0x0F) != 0;
                     break;
 
+                case 0xF0:
+                    if((bytes[2] & 0x0F) == 0x0F) lastHeartbeatReceived = millis();
+                    else heartbeatTime = bytes[2] & 0x0F;
+                    break;
+
                 default:
                     break;
                 }
@@ -155,7 +167,7 @@ namespace RCP {
             }
 
             case RCP_DEVCLASS_SIMPLE_ACTUATOR: {
-                RCP_SimpleActuatorState retstate = pktlen == 1
+                bool retstate = pktlen == 1
                     ? readSimpleActuator(bytes[2])
                     : writeSimpleActuator(bytes[2], static_cast<RCP_SimpleActuatorState>(bytes[3]));
 
@@ -164,7 +176,7 @@ namespace RCP {
                 pkt[1] = RCP_DEVCLASS_SIMPLE_ACTUATOR;
                 insertTimestamp(pkt + 2);
                 pkt[6] = bytes[2];
-                pkt[7] = retstate;
+                pkt[7] = retstate ? RCP_SIMPLE_ACTUATOR_ON : RCP_SIMPLE_ACTUATOR_OFF;
                 write(pkt, 8);
                 break;
             }
@@ -301,7 +313,9 @@ namespace RCP {
     void sendTestState() {
         uint8_t data[7] = {0};
         data[0] = channel | 0x05;
-        data[6] = testState | testNum | (dataStreaming ? 0x80 : 0x00) | (ready ? 0x10 : 0x00);
+        data[1] = 0x00;
+        insertTimestamp(data + 2);
+        data[6] = testState | heartbeatTime | (dataStreaming ? 0x80 : 0x00) | (ready ? 0x10 : 0x00);
         write(data, 7);
     }
 
@@ -309,9 +323,12 @@ namespace RCP {
         if(testState == RCP_TEST_RUNNING || testState == RCP_TEST_PAUSED) Test::tests[testNum]->end(true);
         testState = RCP_TEST_ESTOP;
         sendTestState();
-        ESTOP_PROC->initialize();
-        while(!ESTOP_PROC->isFinished()) ESTOP_PROC->execute();
-        ESTOP_PROC->end(false);
+        if(ESTOP_PROC) {
+            ESTOP_PROC->initialize();
+            while(!ESTOP_PROC->isFinished()) ESTOP_PROC->execute();
+            ESTOP_PROC->end(false);
+        }
+
         while(true) {}
     }
 
@@ -359,6 +376,10 @@ namespace RCP {
 
     uint32_t millis() { return systime() - timeOffset; }
 
+    uint8_t getHeartbeatTime() { return heartbeatTime; }
+
+    RCP_TestRunningState getTestState() { return testState; }
+
     void sendOneFloat(const RCP_DeviceClass devclass, const uint8_t id, float value) {
         uint8_t data[11] = {0};
         data[0] = channel | 9;
@@ -404,11 +425,11 @@ namespace RCP {
     [[gnu::weak]] uint8_t read() { return 0; }
     [[gnu::weak]] uint32_t systime() { return 0; }
 
-    [[gnu::weak]] RCP_SimpleActuatorState readSimpleActuator([[maybe_unused]] uint8_t id) { return {}; }
+    [[gnu::weak]] bool readSimpleActuator([[maybe_unused]] uint8_t id) { return false; }
 
-    [[gnu::weak]] RCP_SimpleActuatorState writeSimpleActuator([[maybe_unused]] uint8_t id,
-                                                              [[maybe_unused]] RCP_SimpleActuatorState state) {
-        return {};
+    [[gnu::weak]] bool writeSimpleActuator([[maybe_unused]] uint8_t id,
+                                           [[maybe_unused]] RCP_SimpleActuatorState state) {
+        return false;
     }
 
     [[gnu::weak]] Floats2 readStepper([[maybe_unused]] uint8_t id) { return {}; }

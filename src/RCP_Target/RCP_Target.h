@@ -143,6 +143,8 @@ namespace RCP {
     bool getDataStreaming();
     uint8_t getTestNum();
     uint32_t millis();
+    uint8_t getHeartbeatTime();
+    RCP_TestRunningState getTestState();
 
     void sendOneFloat(RCP_DeviceClass devclass, uint8_t id, float value);
 
@@ -166,8 +168,8 @@ namespace RCP {
     uint8_t read();
     uint32_t systime();
 
-    RCP_SimpleActuatorState readSimpleActuator(uint8_t id);
-    RCP_SimpleActuatorState writeSimpleActuator(uint8_t id, RCP_SimpleActuatorState state);
+    bool readSimpleActuator(uint8_t id);
+    bool writeSimpleActuator(uint8_t id, RCP_SimpleActuatorState state);
 
     Floats2 readStepper(uint8_t id);
     Floats2 writeStepper(uint8_t id, RCP_StepperControlMode controlMode, float controlVal);
