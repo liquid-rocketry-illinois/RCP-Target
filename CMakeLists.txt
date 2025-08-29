@@ -28,3 +28,12 @@ if(${RCPT_BUILD_TESTS})
     include(GoogleTest)
     gtest_discover_tests(RCPT_Tests)
 endif()
+
+if(${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    add_custom_target(RCP-Target-GithubRelease COMMAND ${CMAKE_CURRENT_SOURCE_DIR}\\GithubRelease.sh ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+    add_dependencies(RCP-Target-GithubRelease RCP-Target)
+
+    if(${RCPT_BUILD_TESTS})
+        add_dependencies(RCP-Target-GithubRelease RCPT_Tests)
+    endif()
+endif()
