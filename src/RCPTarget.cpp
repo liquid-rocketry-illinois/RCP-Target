@@ -17,7 +17,7 @@
 
 #include "RCP_Target.h"
 
-#include "test.h"
+#include "procedures.h"
 
 #ifndef __GNUG__
 #error "This code uses GCC weak symbols, therefore a GCC compiler must be used"
