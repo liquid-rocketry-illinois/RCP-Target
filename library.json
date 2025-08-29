@@ -25,5 +25,8 @@
   },
   "license": "MIT",
   "frameworks": "*",
-  "platforms": "*"
+  "platforms": "*",
+  "scripts": {
+    "postinstall": "piogenversion.py"
+  }
 }
