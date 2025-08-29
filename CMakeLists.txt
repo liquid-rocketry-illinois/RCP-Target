@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.30)
 project(RCP-Target)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 11)
+
+option(RCPT_BUILD_TESTS "Build GTest RCPT tests" OFF)
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/VERSION.cpp
@@ -17,3 +19,12 @@ target_compile_options(RCP-Target PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:/W3 /WX>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
 )
+
+if(${RCPT_BUILD_TESTS})
+    add_subdirectory(test/googletest)
+    enable_testing()
+    add_executable(RCPT_Tests test/test.cpp)
+    target_link_libraries(RCPT_Tests PRIVATE GTest::gtest_main RCP-Target)
+    include(GoogleTest)
+    gtest_discover_tests(RCPT_Tests)
+endif()
