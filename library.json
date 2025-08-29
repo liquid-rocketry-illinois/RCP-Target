@@ -1,0 +1,29 @@
+{
+  "name": "RCP-Target",
+  "version": "1.0.0",
+  "keywords": "RCP, LRI",
+  "description": "Target side library implementation of RCP",
+  "authors":
+  {
+    "name":  "Jacob Baumel",
+    "url":   "https://github.com/jacobbaumel",
+    "maintainer": true
+  },
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/li"
+  },
+  "homepage": "https://github.com/liquid-rocketry-illinois/RCP-Target",
+  "export": {
+    "exclude": [
+      "test"
+    ],
+    "include": [
+      "src/"
+    ]
+  },
+  "license": "MIT",
+  "frameworks": "*",
+  "platforms": "*"
+}
