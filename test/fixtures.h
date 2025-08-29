@@ -55,7 +55,7 @@ protected:
     ~RCPSimpleActuators() override = default;
 
 public:
-    bool actuators[256];
+    bool actuators[256] = {0};
 };
 
 class RCPSteppers : public RCPTest {
@@ -63,7 +63,7 @@ protected:
     ~RCPSteppers() override = default;
 
 public:
-    float steppers[256][2];
+    float steppers[256][2] = {0};
 };
 
 class RCPAngledActuator : public RCPTest {
@@ -71,7 +71,7 @@ protected:
     ~RCPAngledActuator() override = default;
 
 public:
-    float actuators[256];
+    float actuators[256] = {0};
 };
 
 class RCPSensors : public RCPTest {
@@ -79,7 +79,7 @@ protected:
     ~RCPSensors() override = default;
 
 public:
-    float sensorvals[4];
+    float sensorvals[4] = {0};
 };
 
 class RCPRawData : public RCPTest {
@@ -87,7 +87,7 @@ protected:
     ~RCPRawData() override = default;
 
 public:
-    char data[64];
+    char data[64] = {0};
     uint8_t length;
 };
 

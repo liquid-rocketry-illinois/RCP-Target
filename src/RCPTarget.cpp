@@ -60,6 +60,8 @@ namespace RCP {
         initDone = true;
         heartbeatTime = 0;
         lastHeartbeatReceived = 0;
+        timeOffset = 0;
+        inbuffer.clear();
     }
 
     // The majority of RCP related functions
