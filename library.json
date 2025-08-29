@@ -25,8 +25,5 @@
   },
   "license": "MIT",
   "frameworks": "*",
-  "platforms": "*",
-  "scripts": {
-    "postinstall": ["piogenversion.sh"]
-  }
+  "platforms": "*"
 }
