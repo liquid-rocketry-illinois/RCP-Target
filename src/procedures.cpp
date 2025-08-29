@@ -1,10 +1,10 @@
 // See https://github.com/liquid-rocketry-illinois/LRI-RCI-CPP/blob/master/docs/testing.md
 
-#include "procedures.h"
+#include "RCP_Target/procedures.h"
 
 #include <cstring>
 
-#include "RCP_Target.h"
+#include "RCP_Target/RCP_Target.h"
 
 namespace Test {
 

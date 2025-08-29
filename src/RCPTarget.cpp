@@ -15,9 +15,9 @@
  */
 #include <cstring>
 
-#include "RCP_Target.h"
+#include "RCP_Target/RCP_Target.h"
 
-#include "procedures.h"
+#include "RCP_Target/procedures.h"
 
 #ifndef __GNUG__
 #error "This code uses GCC weak symbols, therefore a GCC compiler must be used"

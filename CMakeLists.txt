@@ -13,7 +13,7 @@ add_custom_command(
 )
 
 add_library(RCP-Target src/RCPTarget.cpp src/procedures.cpp ${CMAKE_CURRENT_BINARY_DIR}/VERSION.cpp)
-target_include_directories(RCP-Target PUBLIC src/ PRIVATE src/RCP_Target)
+target_include_directories(RCP-Target PUBLIC src/)
 
 target_compile_options(RCP-Target PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:/W3 /WX>
