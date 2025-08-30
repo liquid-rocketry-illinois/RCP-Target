@@ -8,25 +8,11 @@
 
 namespace Test {
 
-    // clang-format off
     Procedure* tests[16] = {
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
-        new Procedure(),
+        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
+        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
+        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
     };
-    // clang-format on
 
     void Procedure::initialize() {}
 

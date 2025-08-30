@@ -36,21 +36,21 @@ class EStopSetterWrapper : public Procedure {
  public:
   EStopSetterWrapper(Procedure* proc, Procedure* seqestop, Procedure* endestop);
 
-  virtual void initialize() override;
-  virtual void execute() override;
-  virtual void end(bool interrupted) override;
-  virtual bool isFinished() override;
+  void initialize() override;
+  void execute() override;
+  void end(bool interrupted) override;
+  bool isFinished() override;
 
-  virtual ~EStopSetterWrapper();
+  ~EStopSetterWrapper() override;
 };
 
 class OneShot : public Procedure {
   Runnable run;
 
  public:
-  OneShot(Runnable run);
+  explicit OneShot(Runnable run);
 
-  virtual void initialize() override;
+  void initialize() override;
 };
 
 class WaitProcedure : public Procedure {
@@ -58,7 +58,7 @@ class WaitProcedure : public Procedure {
   unsigned long startTime;
 
  public:
-  WaitProcedure(const unsigned long& waitTime);
+  explicit WaitProcedure(const unsigned long& waitTime);
 
   void initialize() override;
   bool isFinished() override;
@@ -68,9 +68,9 @@ class BoolWaiter : public Procedure {
   BoolSupplier supplier;
 
  public:
-  BoolWaiter(BoolSupplier supplier);
+  explicit BoolWaiter(BoolSupplier supplier);
 
-  virtual bool isFinished() override;
+  bool isFinished() override;
 };
 
 class SequentialProcedure : public Procedure {
@@ -79,13 +79,13 @@ class SequentialProcedure : public Procedure {
   int current;
 
  public:
-  template<typename... Procs> SequentialProcedure(Procs... procs);
-  virtual ~SequentialProcedure() override;
+  template<typename... Procs> explicit SequentialProcedure(Procs... procs);
+  ~SequentialProcedure() override;
 
-  virtual void initialize() override;
-  virtual void execute() override;
-  virtual void end(bool interrupted) override;
-  virtual bool isFinished() override;
+  void initialize() override;
+  void execute() override;
+  void end(bool interrupted) override;
+  bool isFinished() override;
 };
 
 class ParallelProcedure : public Procedure {
@@ -95,21 +95,21 @@ class ParallelProcedure : public Procedure {
   bool* const running;
 
  public:
-  template<typename... Procs> ParallelProcedure(Procs... procs);
-  virtual ~ParallelProcedure() override;
+  template<typename... Procs> explicit ParallelProcedure(Procs... procs);
+  ~ParallelProcedure() override;
 
-  virtual void initialize() override;
-  virtual void execute() override;
-  virtual void end(bool interrupted) override;
-  virtual bool isFinished() override;
+  void initialize() override;
+  void execute() override;
+  void end(bool interrupted) override;
+  bool isFinished() override;
 };
 
 class ParallelRaceProcedure : public ParallelProcedure {
  public:
-  template<typename... Procs> ParallelRaceProcedure(Procs... procs);
+  template<typename... Procs> explicit ParallelRaceProcedure(Procs... procs);
 
-  virtual void end(bool interrupted) override;
-  virtual bool isFinished() override;
+  void end(bool interrupted) override;
+  bool isFinished() override;
 };
 
 class ParallelDeadlineProcedure : public Procedure {
@@ -120,13 +120,13 @@ class ParallelDeadlineProcedure : public Procedure {
   bool deadlineRunning;
 
  public:
-  template<typename... Procs> ParallelDeadlineProcedure(Procedure* deadline, Procs... procs);
-  virtual ~ParallelDeadlineProcedure() override;
+  template<typename... Procs> explicit ParallelDeadlineProcedure(Procedure* deadline, Procs... procs);
+  ~ParallelDeadlineProcedure() override;
 
-  virtual void initialize() override;
-  virtual void execute() override;
-  virtual void end(bool interrupted) override;
-  virtual bool isFinished() override;
+  void initialize() override;
+  void execute() override;
+  void end(bool interrupted) override;
+  bool isFinished() override;
 };
 
 class SelectorProcedure : public Procedure {
@@ -137,12 +137,12 @@ class SelectorProcedure : public Procedure {
 
  public:
   SelectorProcedure(Procedure* yes, Procedure* no, BoolSupplier chooser);
-  virtual ~SelectorProcedure() override;
+  ~SelectorProcedure() override;
 
-  virtual void initialize() override;
-  virtual void execute() override;
-  virtual void end(bool interrupted) override;
-  virtual bool isFinished() override;
+  void initialize() override;
+  void execute() override;
+  void end(bool interrupted) override;
+  bool isFinished() override;
 };
 
 } // namespace Test
