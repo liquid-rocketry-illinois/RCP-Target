@@ -114,7 +114,7 @@ namespace RCP {
                     switch(bytes[2] & 0x0F) {
                     case 0x00:
                         if(testState == RCP_TEST_RUNNING || testState == RCP_TEST_PAUSED) {
-                            Test::tests[testNum]->end(true);
+                            Test::getTests()[testNum]->end(true);
                             testState = RCP_TEST_STOPPED;
                             resetPrompt();
                         }
@@ -291,7 +291,7 @@ namespace RCP {
 
     void runTest() {
         if(testState != RCP_TEST_RUNNING) return;
-        Test::Procedure* test = Test::tests[testNum];
+        Test::Procedure* test = Test::getTests()[testNum];
 
         if(firstTestRun) {
             test->initialize();
@@ -322,7 +322,7 @@ namespace RCP {
     }
 
     [[noreturn]] void ESTOP() {
-        if(testState == RCP_TEST_RUNNING || testState == RCP_TEST_PAUSED) Test::tests[testNum]->end(true);
+        if(testState == RCP_TEST_RUNNING || testState == RCP_TEST_PAUSED) Test::getTests()[testNum]->end(true);
         testState = RCP_TEST_ESTOP;
         sendTestState();
         if(ESTOP_PROC) {
@@ -458,3 +458,16 @@ namespace RCP {
 
 
 } // namespace RCP
+
+namespace Test {
+    static Tests tests = {
+        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
+        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
+        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
+    };
+
+    [[gnu::weak]] Tests& getTests() {
+
+        return tests;
+    }
+}

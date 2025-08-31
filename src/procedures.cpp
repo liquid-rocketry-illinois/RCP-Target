@@ -8,12 +8,6 @@
 
 namespace Test {
 
-    Procedure* tests[16] = {
-        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
-        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
-        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
-    };
-
     void Procedure::initialize() {}
 
     void Procedure::execute() {}

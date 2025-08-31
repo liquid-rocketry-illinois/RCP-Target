@@ -1,10 +1,20 @@
 #ifndef TESTS_H
 #define TESTS_H
 
+#include <cstdint>
+
 namespace Test {
 class Procedure;
 
-extern Procedure* tests[16];
+  struct Tests {
+    Procedure* tests[16];
+
+    Procedure* operator[](const size_t index) const {
+      return tests[index];
+    }
+  };
+
+  Tests& getTests();
 
 typedef void (*Runnable)();
 typedef bool (*BoolSupplier)();
