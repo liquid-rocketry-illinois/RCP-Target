@@ -216,12 +216,24 @@ namespace RCP {
                 handleCustomData(bytes + 2, pktlen);
                 break;
 
+
+            case RCP_DEVCLASS_BOOL_SENSOR: {
+                bool resval = readBoolSensor(bytes[2]);
+                uint8_t data[8];
+                data[0] = channel | 0x06;
+                data[1] = RCP_DEVCLASS_BOOL_SENSOR;
+                insertTimestamp(data + 2);
+                data[6] = bytes[2];
+                data[7] = resval ? 0x80 : 0x00;
+                write(data, 8);
+                break;
+            }
+
             case RCP_DEVCLASS_AM_PRESSURE:
             case RCP_DEVCLASS_AM_TEMPERATURE:
             case RCP_DEVCLASS_PRESSURE_TRANSDUCER:
             case RCP_DEVCLASS_RELATIVE_HYGROMETER:
-            case RCP_DEVCLASS_LOAD_CELL:
-            case RCP_DEVCLASS_BOOL_SENSOR: {
+            case RCP_DEVCLASS_LOAD_CELL: {
                 if(pktlen == 1) {
                     sendOneFloat(devclass, bytes[2], readSensor(devclass, bytes[2]).vals[0]);
                 }
@@ -449,6 +461,10 @@ namespace RCP {
 
     [[gnu::weak]] Floats4 readSensor([[maybe_unused]] RCP_DeviceClass devclass, [[maybe_unused]] uint8_t id) {
         return {};
+    }
+
+    [[gnu::weak]] bool readBoolSensor([[maybe_unused]] uint8_t id) {
+        return false;
     }
 
     [[gnu::weak]] void writeSensorTare([[maybe_unused]] RCP_DeviceClass devclass, [[maybe_unused]] uint8_t id,

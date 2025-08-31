@@ -91,6 +91,14 @@ public:
     uint8_t length;
 };
 
+class RCPBoolSensor : public RCPTest {
+protected:
+    ~RCPBoolSensor() override = default;
+
+public:
+    bool sensor;
+};
+
 #define IN context->inbuf
 #define OUT context->outbuf
 #define SYSTIME context->systime
@@ -101,6 +109,7 @@ public:
 #define RAWDATA dynamic_cast<RCPRawData*>(context)->data
 #define RAWLEN dynamic_cast<RCPRawData*>(context)->length
 #define PROMPT dynamic_cast<RCPPromptTest*>(context)->data
+#define SENSEB dynamic_cast<RCPBoolSensor*>(context)->sensor
 #define HELLOHEX 0x48, 0x45, 0x4C, 0x4C, 0x4F
 
 #define PI 3.1415925f

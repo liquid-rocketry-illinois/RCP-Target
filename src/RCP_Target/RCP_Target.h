@@ -178,6 +178,7 @@ namespace RCP {
     float writeAngledActuator(uint8_t id, float controlVal);
 
     Floats4 readSensor(RCP_DeviceClass devclass, uint8_t id);
+    bool readBoolSensor(uint8_t id);
     void writeSensorTare(RCP_DeviceClass devclass, uint8_t id, uint8_t dataChannel, float tareVal);
 
     void handleCustomData(const void* data, uint8_t length);

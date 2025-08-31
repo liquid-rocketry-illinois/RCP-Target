@@ -24,9 +24,7 @@ namespace RCP {
 
     uint32_t systime() { return SYSTIME; }
 
-    bool readSimpleActuator(uint8_t id) {
-        return ACTS[id] ? RCP_SIMPLE_ACTUATOR_ON : RCP_SIMPLE_ACTUATOR_OFF;
-    }
+    bool readSimpleActuator(uint8_t id) { return ACTS[id] ? RCP_SIMPLE_ACTUATOR_ON : RCP_SIMPLE_ACTUATOR_OFF; }
 
     bool writeSimpleActuator(uint8_t id, RCP_SimpleActuatorState state) {
         if(state == RCP_SIMPLE_ACTUATOR_TOGGLE) ACTS[id] = !ACTS[id];
@@ -61,6 +59,8 @@ namespace RCP {
     }
 
     Floats4 readSensor(RCP_DeviceClass devclass, uint8_t id) { return {SENSE[0], SENSE[1], SENSE[2], SENSE[3]}; }
+
+    bool readBoolSensor(uint8_t id) { return SENSEB; }
 
     void writeSensorTare(RCP_DeviceClass devclass, uint8_t id, uint8_t dataChannel, float tareVal) {
         SENSE[dataChannel] += tareVal;
@@ -215,13 +215,14 @@ TEST_F(RCPTest, TwoFloat) {
 
 TEST_F(RCPTest, ThreeFloat) {
     RCP::sendThreeFloat(RCP_DEVCLASS_TEST_STATE, 10, {PI, PI2, PI3});
-    CHECK_OUTBUF(0x11, RCP_DEVCLASS_TEST_STATE, 0x00, 0x00, 0x00, 0x00, 0x0A, HFLOATARR(HPI), HFLOATARR(HPI2), HFLOATARR(HPI3));
+    CHECK_OUTBUF(0x11, RCP_DEVCLASS_TEST_STATE, 0x00, 0x00, 0x00, 0x00, 0x0A, HFLOATARR(HPI), HFLOATARR(HPI2),
+                 HFLOATARR(HPI3));
 }
 
 TEST_F(RCPTest, FourFloat) {
     RCP::sendFourFloat(RCP_DEVCLASS_TEST_STATE, 10, {PI, PI2, PI3, PI4});
-    CHECK_OUTBUF(0x15, RCP_DEVCLASS_TEST_STATE, 0x00, 0x00, 0x00, 0x00, 0x0A, HFLOATARR(HPI), HFLOATARR(HPI2), HFLOATARR(HPI3),
-                 HFLOATARR(HPI4));
+    CHECK_OUTBUF(0x15, RCP_DEVCLASS_TEST_STATE, 0x00, 0x00, 0x00, 0x00, 0x0A, HFLOATARR(HPI), HFLOATARR(HPI2),
+                 HFLOATARR(HPI3), HFLOATARR(HPI4));
 }
 
 TEST_F(RCPTest, TestStart) {
@@ -546,4 +547,16 @@ TEST_F(RCPRawData, RawSend) {
     EXPECT_EQ(RAWLEN, 5);
     std::string rawstr = std::string(RAWDATA, RAWLEN);
     EXPECT_STREQ(rawstr.c_str(), "HELLO");
+}
+
+TEST_F(RCPBoolSensor, BoolSensor) {
+    SENSEB = false;
+    PUSH(0x01, RCP_DEVCLASS_BOOL_SENSOR, 0x0A);
+    RCP::yield();
+    CHECK_OUTBUF(0x06, RCP_DEVCLASS_BOOL_SENSOR, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00);
+
+    SENSEB = true;
+    PUSH(0x01, RCP_DEVCLASS_BOOL_SENSOR, 0x0A);
+    RCP::yield();
+    CHECK_OUTBUF(0x06, RCP_DEVCLASS_BOOL_SENSOR, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x80);
 }
