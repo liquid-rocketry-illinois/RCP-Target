@@ -476,13 +476,12 @@ namespace RCP {
 } // namespace RCP
 
 namespace Test {
-    static Tests tests = {
-        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
-        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
-        new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
-    };
-
     [[gnu::weak]] Tests& getTests() {
+        static Tests tests = {
+            new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
+            new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
+            new Procedure(), new Procedure(), new Procedure(), new Procedure(), new Procedure(),
+        };
 
         return tests;
     }
