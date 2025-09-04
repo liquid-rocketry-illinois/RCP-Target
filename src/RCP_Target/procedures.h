@@ -2,158 +2,174 @@
 #define TESTS_H
 
 #include <cstdint>
+#include <cstring>
 
 namespace Test {
-class Procedure;
+    class Procedure;
 
-  struct Tests {
-    Procedure* tests[16];
+    struct Tests {
+        Procedure* tests[16];
 
-    Procedure* operator[](const size_t index) const {
-      return tests[index];
-    }
-  };
+        Procedure* operator[](const size_t index) const { return tests[index]; }
+    };
 
-  Tests& getTests();
+    Tests& getTests();
 
-typedef void (*Runnable)();
-typedef bool (*BoolSupplier)();
+    typedef void (*Runnable)();
+    typedef bool (*BoolSupplier)();
 
-class OneShot;
-class WaitProcedure;
-class SequentialProcedure;
-class ParallelProcedure;
-class ParallelRaceProcedure;
-class ParallelDeadlineProcedure;
+    class OneShot;
+    class WaitProcedure;
+    class SequentialProcedure;
+    class ParallelProcedure;
+    class ParallelRaceProcedure;
+    class ParallelDeadlineProcedure;
 
-class Procedure {
- public:
-  Procedure() = default;
+    class Procedure {
+    public:
+        Procedure() = default;
 
-  virtual void initialize();
-  virtual void execute();
-  virtual void end(bool interrupted);
-  virtual bool isFinished();
+        virtual void initialize();
+        virtual void execute();
+        virtual void end(bool interrupted);
+        virtual bool isFinished();
 
-  virtual ~Procedure() = default;
-};
+        virtual ~Procedure() = default;
+    };
 
-class EStopSetterWrapper : public Procedure {
-  Procedure* const proc;
-  Procedure* const seqestop;
-  Procedure* const endestop;
+    class EStopSetterWrapper : public Procedure {
+        Procedure* const proc;
+        Procedure* const seqestop;
+        Procedure* const endestop;
 
- public:
-  EStopSetterWrapper(Procedure* proc, Procedure* seqestop, Procedure* endestop);
+    public:
+        EStopSetterWrapper(Procedure* proc, Procedure* seqestop, Procedure* endestop);
 
-  void initialize() override;
-  void execute() override;
-  void end(bool interrupted) override;
-  bool isFinished() override;
+        void initialize() override;
+        void execute() override;
+        void end(bool interrupted) override;
+        bool isFinished() override;
 
-  ~EStopSetterWrapper() override;
-};
+        ~EStopSetterWrapper() override;
+    };
 
-class OneShot : public Procedure {
-  Runnable run;
+    class OneShot : public Procedure {
+        Runnable run;
 
- public:
-  explicit OneShot(Runnable run);
+    public:
+        explicit OneShot(Runnable run);
 
-  void initialize() override;
-};
+        void initialize() override;
+    };
 
-class WaitProcedure : public Procedure {
-  const unsigned long waitTime;
-  unsigned long startTime;
+    class WaitProcedure : public Procedure {
+        const unsigned long waitTime;
+        unsigned long startTime;
 
- public:
-  explicit WaitProcedure(const unsigned long& waitTime);
+    public:
+        explicit WaitProcedure(const unsigned long& waitTime);
 
-  void initialize() override;
-  bool isFinished() override;
-};
+        void initialize() override;
+        bool isFinished() override;
+    };
 
-class BoolWaiter : public Procedure {
-  BoolSupplier supplier;
+    class BoolWaiter : public Procedure {
+        BoolSupplier supplier;
 
- public:
-  explicit BoolWaiter(BoolSupplier supplier);
+    public:
+        explicit BoolWaiter(BoolSupplier supplier);
 
-  bool isFinished() override;
-};
+        bool isFinished() override;
+    };
 
-class SequentialProcedure : public Procedure {
-  Procedure** const procedures;
-  const int numProcedures;
-  int current;
+    class SequentialProcedure : public Procedure {
+        Procedure** const procedures;
+        const int numProcedures;
+        int current;
 
- public:
-  template<typename... Procs> explicit SequentialProcedure(Procs... procs);
-  ~SequentialProcedure() override;
+    public:
+        template<typename... Procs>
+        explicit SequentialProcedure(Procs... procs) :
+            procedures(new Procedure* [sizeof...(Procs)] { procs... }), numProcedures(sizeof...(Procs)) {
+            current = 0;
+        }
 
-  void initialize() override;
-  void execute() override;
-  void end(bool interrupted) override;
-  bool isFinished() override;
-};
+        ~SequentialProcedure() override;
 
-class ParallelProcedure : public Procedure {
- protected:
-  Procedure** const procedures;
-  const unsigned int numProcedures;
-  bool* const running;
+        void initialize() override;
+        void execute() override;
+        void end(bool interrupted) override;
+        bool isFinished() override;
+    };
 
- public:
-  template<typename... Procs> explicit ParallelProcedure(Procs... procs);
-  ~ParallelProcedure() override;
+    class ParallelProcedure : public Procedure {
+    protected:
+        Procedure** const procedures;
+        const unsigned int numProcedures;
+        bool* const running;
 
-  void initialize() override;
-  void execute() override;
-  void end(bool interrupted) override;
-  bool isFinished() override;
-};
+    public:
+        template<typename... Procs>
+        explicit ParallelProcedure(Procs... procs) :
+            procedures(new Procedure* [sizeof...(Procs)] { procs... }), numProcedures(sizeof...(Procs)),
+            running(new bool[sizeof...(Procs)]) {
+            memset(running, 0, numProcedures);
+        }
+        ~ParallelProcedure() override;
 
-class ParallelRaceProcedure : public ParallelProcedure {
- public:
-  template<typename... Procs> explicit ParallelRaceProcedure(Procs... procs);
+        void initialize() override;
+        void execute() override;
+        void end(bool interrupted) override;
+        bool isFinished() override;
+    };
 
-  void end(bool interrupted) override;
-  bool isFinished() override;
-};
+    class ParallelRaceProcedure : public ParallelProcedure {
+    public:
+        template<typename... Procs>
+        explicit ParallelRaceProcedure(Procs... procs) : ParallelProcedure(procs...) {}
 
-class ParallelDeadlineProcedure : public Procedure {
-  Procedure** const procedures;
-  const unsigned int numProcedures;
-  bool* const running;
-  Procedure* const deadline;
-  bool deadlineRunning;
+        void end(bool interrupted) override;
+        bool isFinished() override;
+    };
 
- public:
-  template<typename... Procs> explicit ParallelDeadlineProcedure(Procedure* deadline, Procs... procs);
-  ~ParallelDeadlineProcedure() override;
+    class ParallelDeadlineProcedure : public Procedure {
+        Procedure** const procedures;
+        const unsigned int numProcedures;
+        bool* const running;
+        Procedure* const deadline;
+        bool deadlineRunning;
 
-  void initialize() override;
-  void execute() override;
-  void end(bool interrupted) override;
-  bool isFinished() override;
-};
+    public:
+        template<typename... Procs>
+        explicit ParallelDeadlineProcedure(Procedure* deadline, Procs... procs) :
+            procedures(new Procedure* [sizeof...(Procs)] { procs... }), numProcedures(sizeof...(Procs)),
+            running(new bool[sizeof...(Procs)]), deadline(deadline), deadlineRunning(false) {
+            memset(running, 0, numProcedures);
+        }
 
-class SelectorProcedure : public Procedure {
-  Procedure* const yes;
-  Procedure* const no;
-  const BoolSupplier chooser;
-  bool choice;
+        ~ParallelDeadlineProcedure() override;
 
- public:
-  SelectorProcedure(Procedure* yes, Procedure* no, BoolSupplier chooser);
-  ~SelectorProcedure() override;
+        void initialize() override;
+        void execute() override;
+        void end(bool interrupted) override;
+        bool isFinished() override;
+    };
 
-  void initialize() override;
-  void execute() override;
-  void end(bool interrupted) override;
-  bool isFinished() override;
-};
+    class SelectorProcedure : public Procedure {
+        Procedure* const yes;
+        Procedure* const no;
+        const BoolSupplier chooser;
+        bool choice;
+
+    public:
+        SelectorProcedure(Procedure* yes, Procedure* no, BoolSupplier chooser);
+        ~SelectorProcedure() override;
+
+        void initialize() override;
+        void execute() override;
+        void end(bool interrupted) override;
+        bool isFinished() override;
+    };
 
 } // namespace Test
 

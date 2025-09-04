@@ -49,12 +49,6 @@ namespace Test {
 
     bool BoolWaiter::isFinished() { return supplier(); }
 
-    template<typename... Procs>
-    SequentialProcedure::SequentialProcedure(Procs... procs) :
-        procedures(new Procedure* [sizeof...(Procs)] { procs... }), numProcedures(sizeof...(Procs)) {
-        current = 0;
-    }
-
     SequentialProcedure::~SequentialProcedure() {
         for(int i = 0; i < numProcedures; i++) {
             delete procedures[i];
@@ -86,13 +80,6 @@ namespace Test {
     }
 
     bool SequentialProcedure::isFinished() { return current >= numProcedures; }
-
-    template<typename... Procs>
-    ParallelProcedure::ParallelProcedure(Procs... procs) :
-        procedures(new Procedure* [sizeof...(Procs)] { procs... }), numProcedures(sizeof...(Procs)),
-        running(new bool[sizeof...(Procs)]) {
-        memset(running, 0, numProcedures);
-    }
 
     ParallelProcedure::~ParallelProcedure() {
         for(unsigned int i = 0; i < numProcedures; i++) {
@@ -136,9 +123,6 @@ namespace Test {
         return true;
     }
 
-    template<typename... Procs>
-    ParallelRaceProcedure::ParallelRaceProcedure(Procs... procs) : ParallelProcedure(procs...) {}
-
     void ParallelRaceProcedure::end([[maybe_unused]] bool interrupted) {
         for(unsigned int i = 0; i < numProcedures; i++) {
             if(!running[i]) continue;
@@ -152,13 +136,6 @@ namespace Test {
             if(!running[i]) return true;
         }
         return false;
-    }
-
-    template<typename... Procs>
-    ParallelDeadlineProcedure::ParallelDeadlineProcedure(Procedure* deadline, Procs... procs) :
-        procedures(new Procedure* [sizeof...(Procs)] { procs... }), numProcedures(sizeof...(Procs)),
-        running(new bool[sizeof...(Procs)]), deadline(deadline), deadlineRunning(false) {
-        memset(running, 0, numProcedures);
     }
 
     ParallelDeadlineProcedure::~ParallelDeadlineProcedure() {
