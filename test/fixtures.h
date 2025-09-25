@@ -55,7 +55,7 @@ protected:
     ~RCPSimpleActuators() override = default;
 
 public:
-    bool actuators[256] = {0};
+    RCP_SimpleActuatorState actuators[256] = { RCP_SIMPLE_ACTUATOR_OFF };
 };
 
 class RCPSteppers : public RCPTest {

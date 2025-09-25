@@ -131,6 +131,8 @@ namespace RCP {
     void yield();
     void runTest();
     [[noreturn]] void systemReset();
+    void pauseWriteUpdates();
+    void unpauseWriteUpdates();
 
     void sendTestState();
     [[noreturn]] void ESTOP();
@@ -168,14 +170,18 @@ namespace RCP {
     uint8_t read();
     uint32_t systime();
 
-    bool readSimpleActuator(uint8_t id);
-    bool writeSimpleActuator(uint8_t id, RCP_SimpleActuatorState state);
+    RCP_SimpleActuatorState writeSimpleActuator(uint8_t id, RCP_SimpleActuatorState state);
+    Floats2 writeStepper(uint8_t id, RCP_StepperControlMode controlMode, float controlVal);
+    float writeAngledActuator(uint8_t id, float controlVal);
+
+    RCP_SimpleActuatorState readSimpleActuator(uint8_t id);
+    RCP_SimpleActuatorState simpleActuatorWrite_CLBK(uint8_t id, RCP_SimpleActuatorState state);
 
     Floats2 readStepper(uint8_t id);
-    Floats2 writeStepper(uint8_t id, RCP_StepperControlMode controlMode, float controlVal);
+    Floats2 stepperWrite_CLBK(uint8_t id, RCP_StepperControlMode controlMode, float controlVal);
 
     float readAngledActuator(uint8_t id);
-    float writeAngledActuator(uint8_t id, float controlVal);
+    float angledActuatorWrite_CLBK(uint8_t id, float controlVal);
 
     Floats4 readSensor(RCP_DeviceClass devclass, uint8_t id);
     bool readBoolSensor(uint8_t id);

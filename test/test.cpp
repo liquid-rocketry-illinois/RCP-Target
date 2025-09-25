@@ -1,6 +1,7 @@
 #include "fixtures.h"
 #include "gtest/gtest.h"
 
+#include "RCP_Target/RCP_Target.h"
 #include "RCP_Target/procedures.h"
 
 RCPRawTest* context;
@@ -24,17 +25,19 @@ namespace RCP {
 
     uint32_t systime() { return SYSTIME; }
 
-    bool readSimpleActuator(uint8_t id) { return ACTS[id] ? RCP_SIMPLE_ACTUATOR_ON : RCP_SIMPLE_ACTUATOR_OFF; }
+    RCP_SimpleActuatorState readSimpleActuator(uint8_t id) { return ACTS[id]; }
 
-    bool writeSimpleActuator(uint8_t id, RCP_SimpleActuatorState state) {
-        if(state == RCP_SIMPLE_ACTUATOR_TOGGLE) ACTS[id] = !ACTS[id];
+    RCP_SimpleActuatorState simpleActuatorWrite_CLBK(uint8_t id, RCP_SimpleActuatorState state) {
+        if(state == RCP_SIMPLE_ACTUATOR_TOGGLE) {
+            ACTS[id] = ACTS[id] == RCP_SIMPLE_ACTUATOR_ON ? RCP_SIMPLE_ACTUATOR_OFF : RCP_SIMPLE_ACTUATOR_ON;
+        }
         else ACTS[id] = state;
         return ACTS[id];
     }
 
     Floats2 readStepper(uint8_t id) { return {STEPS[id][0], STEPS[id][1]}; }
 
-    Floats2 writeStepper(uint8_t id, RCP_StepperControlMode controlMode, float controlVal) {
+    Floats2 stepperWrite_CLBK(uint8_t id, RCP_StepperControlMode controlMode, float controlVal) {
         switch(controlMode) {
         case RCP_STEPPER_SPEED_CONTROL:
             STEPS[id][1] = controlVal;
@@ -53,7 +56,7 @@ namespace RCP {
 
     float readAngledActuator(uint8_t id) { return ANGACT[id]; }
 
-    float writeAngledActuator(uint8_t id, float controlVal) {
+    float angledActuatorWrite_CLBK(uint8_t id, float controlVal) {
         ANGACT[id] = controlVal;
         return controlVal;
     }
@@ -326,10 +329,10 @@ TEST_F(RCPPromptTest, PromptReset) {
 }
 
 TEST_F(RCPSimpleActuators, ActuatorRead) {
-    ACTS[0] = true;
-    ACTS[1] = false;
-    ACTS[2] = false;
-    ACTS[3] = true;
+    ACTS[0] = RCP_SIMPLE_ACTUATOR_ON;
+    ACTS[1] = RCP_SIMPLE_ACTUATOR_OFF;
+    ACTS[2] = RCP_SIMPLE_ACTUATOR_OFF;
+    ACTS[3] = RCP_SIMPLE_ACTUATOR_ON;
 
     PUSH(0x01, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00);
     PUSH(0x01, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x01);
@@ -350,24 +353,40 @@ TEST_F(RCPSimpleActuators, ActuatorRead) {
 TEST_F(RCPSimpleActuators, ActuatorWrite) {
     PUSH(0x02, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00, RCP_SIMPLE_ACTUATOR_ON);
     RCP::yield();
-    EXPECT_TRUE(ACTS[0]);
+    EXPECT_EQ(ACTS[0], RCP_SIMPLE_ACTUATOR_ON);
     CHECK_OUTBUF(0x06, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00, 0x00, 0x00, 0x00, 0x00, RCP_SIMPLE_ACTUATOR_ON);
 
     PUSH(0x02, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00, RCP_SIMPLE_ACTUATOR_OFF);
     RCP::yield();
-    EXPECT_FALSE(ACTS[0]);
+    EXPECT_EQ(ACTS[0], RCP_SIMPLE_ACTUATOR_OFF);
     CHECK_OUTBUF(0x06, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00, 0x00, 0x00, 0x00, 0x00, RCP_SIMPLE_ACTUATOR_OFF);
 
     PUSH(0x02, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00, RCP_SIMPLE_ACTUATOR_TOGGLE);
     PUSH(0x02, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00, RCP_SIMPLE_ACTUATOR_TOGGLE);
 
     RCP::yield();
-    EXPECT_TRUE(ACTS[0]);
+    EXPECT_EQ(ACTS[0], RCP_SIMPLE_ACTUATOR_ON);
     CHECK_OUTBUF(0x06, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00, 0x00, 0x00, 0x00, 0x00, RCP_SIMPLE_ACTUATOR_ON);
 
     RCP::yield();
-    EXPECT_FALSE(ACTS[0]);
+    EXPECT_EQ(ACTS[0], RCP_SIMPLE_ACTUATOR_OFF);
     CHECK_OUTBUF(0x06, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00, 0x00, 0x00, 0x00, 0x00, RCP_SIMPLE_ACTUATOR_OFF);
+}
+
+TEST_F(RCPSimpleActuators, ActuatorWritePaused) {
+    RCP::pauseWriteUpdates();
+
+    PUSH(0x02, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00, RCP_SIMPLE_ACTUATOR_ON);
+    RCP::yield();
+    EXPECT_EQ(OUT.size(), 0);
+    EXPECT_EQ(ACTS[0], RCP_SIMPLE_ACTUATOR_ON);
+
+    RCP::unpauseWriteUpdates();
+
+    PUSH(0x02, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00, RCP_SIMPLE_ACTUATOR_OFF);
+    RCP::yield();
+    CHECK_OUTBUF(0x06, RCP_DEVCLASS_SIMPLE_ACTUATOR, 0x00, 0x00, 0x00, 0x00, 0x00, RCP_SIMPLE_ACTUATOR_OFF);
+    EXPECT_EQ(ACTS[0], RCP_SIMPLE_ACTUATOR_OFF);
 }
 
 TEST_F(RCPSteppers, StepperRead) {
@@ -410,6 +429,22 @@ TEST_F(RCPSteppers, StepperWriteSpeed) {
     CHECK_TWOFLOAT(RCP_DEVCLASS_STEPPER, 0, 0, HPI);
 }
 
+TEST_F(RCPSteppers, StepperWritePaused) {
+    RCP::pauseWriteUpdates();
+
+    PUSH(0x06, RCP_DEVCLASS_STEPPER, 0, RCP_STEPPER_ABSOLUTE_POS_CONTROL, HFLOATARR(HPI));
+    RCP::yield();
+    EXPECT_EQ(PI, STEPS[0][0]);
+    EXPECT_EQ(OUT.size(), 0);
+
+    RCP::unpauseWriteUpdates();
+
+    PUSH(0x06, RCP_DEVCLASS_STEPPER, 0, RCP_STEPPER_RELATIVE_POS_CONTROL, HFLOATARR(HPI));
+    RCP::yield();
+    EXPECT_EQ(PI2, STEPS[0][0]);
+    CHECK_TWOFLOAT(RCP_DEVCLASS_STEPPER, 0, HPI2, 0);
+}
+
 TEST_F(RCPAngledActuator, AngledActuatorsRead) {
     ANGACT[0] = PI;
     ANGACT[1] = PI2;
@@ -437,6 +472,22 @@ TEST_F(RCPAngledActuator, AngledActuatorsWrite) {
     RCP::yield();
     EXPECT_EQ(PI, ANGACT[0]);
     CHECK_ONEFLOAT(RCP_DEVCLASS_ANGLED_ACTUATOR, 0, HPI);
+}
+
+TEST_F(RCPAngledActuator, AngledActuatorsWritePaused) {
+    RCP::pauseWriteUpdates();
+
+    PUSH(0x05, RCP_DEVCLASS_ANGLED_ACTUATOR, 0x00, HFLOATARR(HPI));
+    RCP::yield();
+    EXPECT_EQ(PI, ANGACT[0]);
+    EXPECT_EQ(OUT.size(), 0);
+
+    RCP::unpauseWriteUpdates();
+
+    PUSH(0x05, RCP_DEVCLASS_ANGLED_ACTUATOR, 0x00, HFLOATARR(HPI2));
+    RCP::yield();
+    EXPECT_EQ(PI2, ANGACT[0]);
+    CHECK_ONEFLOAT(RCP_DEVCLASS_ANGLED_ACTUATOR, 0, HPI2);
 }
 
 TEST_F(RCPSensors, SensorRead1) {
