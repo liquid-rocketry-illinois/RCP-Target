@@ -1,7 +1,7 @@
 #ifndef RCP_HOST_H
 #define RCP_HOST_H
 
-#include <cstdint>
+#include <stdint.h>
 
 #include "LRIRingBuf.h"
 #include "procedures.h"
