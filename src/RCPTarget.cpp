@@ -13,7 +13,7 @@
  * In this implementation, the testing framework is used for executing the emergency stop sequence. The
  * sequence can be defined by changing the ESTOP_PROC variable.
  */
-#include <cstring>
+#include <string.h>
 
 #include "RCP_Target/RCP_Target.h"
 
