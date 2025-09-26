@@ -135,6 +135,7 @@ namespace RCP {
     void unpauseWriteUpdates();
 
     void sendTestState();
+    void startProcedure(uint8_t id);
     [[noreturn]] void ESTOP();
     void RCPWriteSerialString(const char* str);
 

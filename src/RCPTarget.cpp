@@ -334,6 +334,12 @@ namespace RCP {
         write(data, 7);
     }
 
+    void startProcedure(uint8_t id) {
+        testNum = id;
+        testState = RCP_TEST_RUNNING;
+        firstTestRun = true;
+    }
+
     [[noreturn]] void ESTOP() {
         if(testState == RCP_TEST_RUNNING || testState == RCP_TEST_PAUSED) Test::getTests()[testNum]->end(true);
         testState = RCP_TEST_ESTOP;
