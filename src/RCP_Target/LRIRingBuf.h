@@ -45,8 +45,13 @@
 #ifndef __LRIRINGBUF_H__
 #define __LRIRINGBUF_H__
 
+#ifndef interrupts
 void interrupts();
+#endif
+
+#ifndef noInterrupts
 void noInterrupts();
+#endif
 
 /*
  * Set the integer size used to store the size of the buffer according of
