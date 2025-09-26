@@ -2,8 +2,6 @@
 
 #include "RCP_Target/procedures.h"
 
-#include <cstring>
-
 #include "RCP_Target/RCP_Target.h"
 
 namespace Test {

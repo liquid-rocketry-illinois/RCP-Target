@@ -1,8 +1,8 @@
 #ifndef TESTS_H
 #define TESTS_H
 
-#include <cstdint>
-#include <cstring>
+#include <stdint.h>
+#include <string.h>
 
 namespace Test {
     class Procedure;
