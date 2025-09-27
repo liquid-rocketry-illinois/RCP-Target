@@ -66,7 +66,7 @@ namespace RCP {
     bool readBoolSensor(uint8_t id) { return SENSEB; }
 
     void writeSensorTare(RCP_DeviceClass devclass, uint8_t id, uint8_t dataChannel, float tareVal) {
-        SENSE[dataChannel] += tareVal;
+        SENSE[dataChannel] -= tareVal;
     }
 
     void handleCustomData(const void* data, uint8_t length) {
@@ -532,7 +532,7 @@ TEST_F(RCPSensors, SensorTare1) {
     RCP::yield();
 
     EXPECT_EQ(OUT.size(), 0);
-    EXPECT_EQ(SENSE[0], PI);
+    EXPECT_EQ(SENSE[0], -PI);
 }
 
 TEST_F(RCPSensors, SensorTare2) {
@@ -546,8 +546,8 @@ TEST_F(RCPSensors, SensorTare2) {
     RCP::yield();
 
     EXPECT_EQ(OUT.size(), 0);
-    EXPECT_EQ(SENSE[0], PI);
-    EXPECT_EQ(SENSE[1], PI2);
+    EXPECT_EQ(SENSE[0], -PI);
+    EXPECT_EQ(SENSE[1], -PI2);
 }
 
 TEST_F(RCPSensors, SensorTare3) {
@@ -564,9 +564,9 @@ TEST_F(RCPSensors, SensorTare3) {
     RCP::yield();
 
     EXPECT_EQ(OUT.size(), 0);
-    EXPECT_EQ(SENSE[0], PI);
-    EXPECT_EQ(SENSE[1], PI2);
-    EXPECT_EQ(SENSE[2], PI3);
+    EXPECT_EQ(SENSE[0], -PI);
+    EXPECT_EQ(SENSE[1], -PI2);
+    EXPECT_EQ(SENSE[2], -PI3);
 }
 
 TEST_F(RCPSensors, SensorTare4) {
@@ -586,10 +586,10 @@ TEST_F(RCPSensors, SensorTare4) {
     RCP::yield();
 
     EXPECT_EQ(OUT.size(), 0);
-    EXPECT_EQ(SENSE[0], PI);
-    EXPECT_EQ(SENSE[1], PI2);
-    EXPECT_EQ(SENSE[2], PI3);
-    EXPECT_EQ(SENSE[3], PI4);
+    EXPECT_EQ(SENSE[0], -PI);
+    EXPECT_EQ(SENSE[1], -PI2);
+    EXPECT_EQ(SENSE[2], -PI3);
+    EXPECT_EQ(SENSE[3], -PI4);
 }
 
 TEST_F(RCPRawData, RawSend) {
