@@ -48,6 +48,8 @@
 #if !__has_include("Arduino.h")
 void interrupts();
 void noInterrupts();
+#else
+#include <Arduino.h>
 #endif
 
 /*
