@@ -1,10 +1,31 @@
+#include <set>
+
 #include "fixtures.h"
 #include "gtest/gtest.h"
 
 #include "RCP_Target/RCP_Target.h"
 #include "RCP_Target/procedures.h"
 
+
 RCPRawTest* context;
+
+// const std::set<RCP_DeviceClass> SENSOR_CLASSES = {
+//     RCP_DEVCLASS_STEPPER,
+//     RCP_DEVCLASS_AM_PRESSURE,
+//     RCP_DEVCLASS_AM_TEMPERATURE,
+//     RCP_DEVCLASS_PRESSURE_TRANSDUCER,
+//     RCP_DEVCLASS_RELATIVE_HYGROMETER,
+//     RCP_DEVCLASS_LOAD_CELL,
+//     RCP_DEVCLASS_BOOL_SENSOR,
+//
+//     RCP_DEVCLASS_POWERMON,
+//
+//     RCP_DEVCLASS_ACCELEROMETER,
+//     RCP_DEVCLASS_GYROSCOPE,
+//     RCP_DEVCLASS_MAGNETOMETER,
+//
+//     RCP_DEVCLASS_GPS,
+// };
 
 namespace RCP {
     void write(const void* rdata, uint8_t length) {
@@ -491,10 +512,16 @@ TEST_F(RCPAngledActuator, AngledActuatorsWritePaused) {
 }
 
 TEST_F(RCPSensors, SensorRead1) {
+    const std::set<RCP_DeviceClass> OneFloatDevices = {
+        RCP_DEVCLASS_AM_PRESSURE,         RCP_DEVCLASS_AM_TEMPERATURE, RCP_DEVCLASS_PRESSURE_TRANSDUCER,
+        RCP_DEVCLASS_RELATIVE_HYGROMETER, RCP_DEVCLASS_LOAD_CELL
+    };
     SENSE[0] = PI;
-    PUSH(0x01, RCP_DEVCLASS_PRESSURE_TRANSDUCER, 0x00);
-    RCP::yield();
-    CHECK_ONEFLOAT(RCP_DEVCLASS_PRESSURE_TRANSDUCER, 0, HPI);
+    for(const auto& device : OneFloatDevices) {
+        PUSH(0x01, static_cast<uint8_t>(device), 0x00);
+        RCP::yield();
+        CHECK_ONEFLOAT(static_cast<uint8_t>(device), 0, HPI);
+    }
 }
 
 TEST_F(RCPSensors, SensorRead2) {
