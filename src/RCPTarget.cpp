@@ -236,10 +236,10 @@ namespace RCP {
                 }
 
                 else {
-                    uint8_t channel = bytes[3];
+                    uint8_t chan = bytes[3];
                     float tareval;
                     memcpy(&tareval, bytes + 4, 4);
-                    writeSensorTare(devclass, bytes[2], channel, tareval);
+                    writeSensorTare(devclass, bytes[2], chan, tareval);
                 }
 
                 break;
@@ -251,10 +251,10 @@ namespace RCP {
                 }
 
                 else {
-                    uint8_t channel = bytes[3];
+                    uint8_t chan = bytes[3];
                     float tareval;
                     memcpy(&tareval, bytes + 4, 4);
-                    writeSensorTare(devclass, bytes[2], channel, tareval);
+                    writeSensorTare(devclass, bytes[2], chan, tareval);
                 }
 
                 break;
@@ -268,10 +268,10 @@ namespace RCP {
                 }
 
                 else {
-                    uint8_t channel = bytes[3];
+                    uint8_t chan = bytes[3];
                     float tareval;
                     memcpy(&tareval, bytes + 4, 4);
-                    writeSensorTare(devclass, bytes[2], channel, tareval);
+                    writeSensorTare(devclass, bytes[2], chan, tareval);
                 }
 
                 break;
@@ -283,10 +283,10 @@ namespace RCP {
                 }
 
                 else {
-                    uint8_t channel = bytes[3];
+                    uint8_t chan = bytes[3];
                     float tareval;
                     memcpy(&tareval, bytes + 4, 4);
-                    writeSensorTare(devclass, bytes[2], channel, tareval);
+                    writeSensorTare(devclass, bytes[2], chan, tareval);
                 }
 
                 break;
