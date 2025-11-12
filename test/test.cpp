@@ -512,12 +512,12 @@ TEST_F(RCPAngledActuator, AngledActuatorsWritePaused) {
 }
 
 TEST_F(RCPSensors, SensorRead1) {
-    const std::set<RCP_DeviceClass> OneFloatDevices = {
+    const std::set<RCP_DeviceClass> OneFloatSensors = {
         RCP_DEVCLASS_AM_PRESSURE,         RCP_DEVCLASS_AM_TEMPERATURE, RCP_DEVCLASS_PRESSURE_TRANSDUCER,
         RCP_DEVCLASS_RELATIVE_HYGROMETER, RCP_DEVCLASS_LOAD_CELL
     };
     SENSE[0] = PI;
-    for(const auto& device : OneFloatDevices) {
+    for(const auto& device : OneFloatSensors) {
         PUSH(0x01, static_cast<uint8_t>(device), 0x00);
         RCP::yield();
         CHECK_ONEFLOAT(static_cast<uint8_t>(device), 0, HPI);
@@ -525,30 +525,40 @@ TEST_F(RCPSensors, SensorRead1) {
 }
 
 TEST_F(RCPSensors, SensorRead2) {
+    const std::set<RCP_DeviceClass> TwoFloatSensors = {RCP_DEVCLASS_POWERMON};
     SENSE[0] = PI;
     SENSE[1] = PI2;
-    PUSH(0x01, RCP_DEVCLASS_POWERMON, 0x00);
-    RCP::yield();
-    CHECK_TWOFLOAT(RCP_DEVCLASS_POWERMON, 0, HPI, HPI2);
+    for(const auto& device : TwoFloatSensors) {
+        PUSH(0x01, static_cast<uint8_t>(device), 0x00);
+        RCP::yield();
+        CHECK_TWOFLOAT(static_cast<uint8_t>(device), 0, HPI, HPI2);
+    }
 }
 
 TEST_F(RCPSensors, SensorRead3) {
+    const std::set<RCP_DeviceClass> ThreeFloatSensors = {RCP_DEVCLASS_ACCELEROMETER, RCP_DEVCLASS_GYROSCOPE,
+                                                         RCP_DEVCLASS_MAGNETOMETER};
     SENSE[0] = PI;
     SENSE[1] = PI2;
     SENSE[2] = PI3;
-    PUSH(0x01, RCP_DEVCLASS_ACCELEROMETER, 0x00);
-    RCP::yield();
-    CHECK_THREEFLOAT(RCP_DEVCLASS_ACCELEROMETER, 0, HPI, HPI2, HPI3);
+    for(const auto& device : ThreeFloatSensors) {
+        PUSH(0x01, static_cast<uint8_t>(device), 0x00);
+        RCP::yield();
+        CHECK_THREEFLOAT(static_cast<uint8_t>(device), 0, HPI, HPI2, HPI3);
+    }
 }
 
 TEST_F(RCPSensors, SensorRead4) {
+    const std::set<RCP_DeviceClass> FourFloatSensors = {RCP_DEVCLASS_GPS};
     SENSE[0] = PI;
     SENSE[1] = PI2;
     SENSE[2] = PI3;
     SENSE[3] = PI4;
-    PUSH(0x01, RCP_DEVCLASS_GPS, 0x00);
-    RCP::yield();
-    CHECK_FOURFLOAT(RCP_DEVCLASS_GPS, 0, HPI, HPI2, HPI3, HPI4);
+    for(const auto& device : FourFloatSensors) {
+        PUSH(0x01, static_cast<uint8_t>(device), 0x00);
+        RCP::yield();
+        CHECK_FOURFLOAT(static_cast<uint8_t>(device), 0, HPI, HPI2, HPI3, HPI4);
+    }
 }
 
 TEST_F(RCPSensors, SensorTare1) {
