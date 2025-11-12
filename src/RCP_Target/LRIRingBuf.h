@@ -46,6 +46,7 @@
 #define __LRIRINGBUF_H__
 
 #if !__has_include("Arduino.h")
+#include <stddef.h>
 void interrupts();
 void noInterrupts();
 #else
