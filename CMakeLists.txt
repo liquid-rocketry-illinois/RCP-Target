@@ -4,6 +4,7 @@ project(RCP-Target)
 set(CMAKE_CXX_STANDARD 17)
 
 option(RCPT_BUILD_TESTS "Build GTest RCPT tests" OFF)
+option(RCPT_STM32_PRINTF "Enable forwarding printf to RCP_DEVCLASS_CUSTOM" OFF)
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/VERSION.cpp
@@ -19,6 +20,10 @@ target_compile_options(RCP-Target PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:/W3 /WX>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
 )
+
+if(${RCPT_STM32_PRINTF})
+    target_compile_definitions(RCP-Target PRIVATE -DRCPT_STM32_PRINTF)
+endif()
 
 if(${RCPT_BUILD_TESTS})
     add_subdirectory(test/googletest)

@@ -45,6 +45,16 @@ namespace RCP {
     static RCP_PromptDataType lastType;
     static PromptAcceptor pacceptor;
 
+#ifdef RCPT_STM32_PRINTF
+    LRI::RingBuf<uint8_t, RCP_SERIAL_BUFFER_SIZE> printfBuf;
+
+    extern "C" int __io_putchar(int ch) {
+        if(printfBuf.isFull()) return 0;
+        printfBuf.push(ch);
+        return 1;
+    }
+#endif
+
     inline void insertTimestamp(uint8_t* start) {
         uint32_t time = millis();
         start[0] = time >> 24;
@@ -296,6 +306,21 @@ namespace RCP {
                 break;
             }
         }
+
+#ifdef RCPT_STM32_PRINTF
+        uint8_t bytes = 0;
+        uint8_t data[65] = {0};
+        data[1] = RCP_DEVCLASS_CUSTOM;
+
+        for(; bytes < 63 && !printfBuf.isEmpty(); bytes++) {
+            uint8_t val;
+            printfBuf.pop(val);
+            data[bytes + 2] = val;
+        }
+
+        data[0] = channel | bytes;
+        write(data, bytes + 2);
+#endif
     }
 
     void runTest() {
