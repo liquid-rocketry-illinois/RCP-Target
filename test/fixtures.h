@@ -66,6 +66,14 @@ public:
     float steppers[256][2] = {0};
 };
 
+class RCPMotors : public RCPTest {
+protected:
+    ~RCPMotors() override = default;
+
+public:
+    float motors[256] = {0};
+};
+
 class RCPAngledActuator : public RCPTest {
 protected:
     ~RCPAngledActuator() override = default;
@@ -104,6 +112,7 @@ public:
 #define SYSTIME context->systime
 #define ACTS dynamic_cast<RCPSimpleActuators*>(context)->actuators
 #define STEPS dynamic_cast<RCPSteppers*>(context)->steppers
+#define MOTORS dynamic_cast<RCPMotors*>(context)->motors
 #define ANGACT dynamic_cast<RCPAngledActuator*>(context)->actuators
 #define SENSE dynamic_cast<RCPSensors*>(context)->sensorvals
 #define RAWDATA dynamic_cast<RCPRawData*>(context)->data

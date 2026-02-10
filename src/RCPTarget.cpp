@@ -209,6 +209,17 @@ namespace RCP {
                 break;
             }
 
+            case RCP_DEVCLASS_MOTOR: {
+                if(pktlen == 1) sendOneFloat(RCP_DEVCLASS_MOTOR, bytes[2], readMotor(bytes[2]));
+                else {
+                    float val = 0;
+                    memcpy(&val, bytes + 3, 4);
+                    writeMotor(bytes[2], val);
+                }
+
+                break;
+            }
+
             case RCP_DEVCLASS_CUSTOM:
                 handleCustomData(bytes + 2, pktlen);
                 break;
@@ -458,6 +469,12 @@ namespace RCP {
         return newstate;
     }
 
+    float writeMotor(uint8_t id, float value) {
+        float newstate = motorWrite_CLBK(id, value);
+        if(!writeUpdatesPaused) sendOneFloat(RCP_DEVCLASS_MOTOR, id, newstate);
+        return newstate;
+    }
+
     float writeAngledActuator(uint8_t id, float controlVal) {
         float newstate = angledActuatorWrite_CLBK(id, controlVal);
         if(!writeUpdatesPaused) sendOneFloat(RCP_DEVCLASS_ANGLED_ACTUATOR, id, newstate);
@@ -479,6 +496,14 @@ namespace RCP {
                                             [[maybe_unused]] RCP_StepperControlMode controlMode,
                                             [[maybe_unused]] float controlVal) {
         return {};
+    }
+
+    [[gnu::weak]] float readMotor([[maybe_unused]] uint8_t id) {
+        return 0;
+    }
+
+    [[gnu::weak]] float motorWrite_CLBK([[maybe_unused]] uint8_t id, [[maybe_unused]] float value) {
+        return 0;
     }
 
     [[gnu::weak]] float readAngledActuator([[maybe_unused]] uint8_t id) { return 0; }

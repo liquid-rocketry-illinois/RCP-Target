@@ -54,6 +54,13 @@ namespace RCP {
         return readStepper(id);
     }
 
+    float readMotor(uint8_t id) { return MOTORS[id]; }
+
+    float motorWrite_CLBK(uint8_t id, float value) {
+        MOTORS[id] = value;
+        return readMotor(id);
+    }
+
     float readAngledActuator(uint8_t id) { return ANGACT[id]; }
 
     float angledActuatorWrite_CLBK(uint8_t id, float controlVal) {
@@ -92,6 +99,7 @@ TEST(RCPConstants, Constants) {
     EXPECT_EQ(RCP_DEVCLASS_STEPPER, 0x02);
     EXPECT_EQ(RCP_DEVCLASS_PROMPT, 0x03);
     EXPECT_EQ(RCP_DEVCLASS_ANGLED_ACTUATOR, 0x04);
+    EXPECT_EQ(RCP_DEVCLASS_MOTOR, 0x05);
     EXPECT_EQ(RCP_DEVCLASS_CUSTOM, 0x80);
     EXPECT_EQ(RCP_DEVCLASS_AM_PRESSURE, 0x90);
     EXPECT_EQ(RCP_DEVCLASS_AM_TEMPERATURE, 0x91);
@@ -443,6 +451,32 @@ TEST_F(RCPSteppers, StepperWritePaused) {
     RCP::yield();
     EXPECT_EQ(PI2, STEPS[0][0]);
     CHECK_TWOFLOAT(RCP_DEVCLASS_STEPPER, 0, HPI2, 0);
+}
+
+TEST_F(RCPMotors, MotorWrite) {
+    PUSH(0x05, RCP_DEVCLASS_MOTOR, 0, HFLOATARR(HPI));
+    RCP::yield();
+    CHECK_ONEFLOAT(RCP_DEVCLASS_MOTOR, 0, HPI);
+    EXPECT_EQ(MOTORS[0], PI);
+
+    PUSH(0x05, RCP_DEVCLASS_MOTOR, 1, HFLOATARR(HPI2));
+    RCP::yield();
+    CHECK_ONEFLOAT(RCP_DEVCLASS_MOTOR, 1, HPI2);
+    EXPECT_EQ(MOTORS[1], PI2);
+}
+
+TEST_F(RCPMotors, MotorRead) {
+    MOTORS[0] = PI;
+    MOTORS[1] = PI2;
+
+    PUSH(0x01, RCP_DEVCLASS_MOTOR, 0);
+    PUSH(0x01, RCP_DEVCLASS_MOTOR, 1);
+
+    RCP::yield();
+    CHECK_ONEFLOAT(RCP_DEVCLASS_MOTOR, 0, HPI);
+
+    RCP::yield();
+    CHECK_ONEFLOAT(RCP_DEVCLASS_MOTOR, 1, HPI2);
 }
 
 TEST_F(RCPAngledActuator, AngledActuatorsRead) {
