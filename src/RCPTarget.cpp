@@ -241,6 +241,7 @@ namespace RCP {
             case RCP_DEVCLASS_AM_TEMPERATURE:
             case RCP_DEVCLASS_PRESSURE_TRANSDUCER:
             case RCP_DEVCLASS_RELATIVE_HYGROMETER:
+            case RCP_DEVCLASS_FLOW_METER:
             case RCP_DEVCLASS_LOAD_CELL: {
                 if(pktlen == 1) {
                     sendOneFloat(devclass, bytes[2], readSensor(devclass, bytes[2]).vals[0]);
