@@ -238,7 +238,7 @@ namespace RCP {
             }
 
             case RCP_DEVCLASS_AM_PRESSURE:
-            case RCP_DEVCLASS_AM_TEMPERATURE:
+            case RCP_DEVCLASS_TEMPERATURE:
             case RCP_DEVCLASS_PRESSURE_TRANSDUCER:
             case RCP_DEVCLASS_RELATIVE_HYGROMETER:
             case RCP_DEVCLASS_FLOW_METER:
