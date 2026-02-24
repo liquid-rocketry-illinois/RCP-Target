@@ -145,7 +145,7 @@ namespace RCP {
                         systemReset();
 
                     case 0x03:
-                        timeOffset = millis();
+                        timeOffset = systime();
                         break;
                     }
 
