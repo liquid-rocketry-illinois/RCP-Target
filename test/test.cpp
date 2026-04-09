@@ -68,6 +68,15 @@ namespace RCP {
         return controlVal;
     }
 
+    uint8_t readDiscreteActuator(uint8_t id) {
+        return DACT[id];
+    }
+
+    uint8_t discreteActuatorWrite_CLBK(uint8_t id, uint8_t state) {
+        DACT[id] = state;
+        return state;
+    }
+
     Floats4 readSensor(RCP_DeviceClass devclass, uint8_t id) { return {SENSE[0], SENSE[1], SENSE[2], SENSE[3]}; }
 
     bool readBoolSensor(uint8_t id) { return SENSEB; }
@@ -100,6 +109,7 @@ TEST(RCPConstants, Constants) {
     EXPECT_EQ(RCP_DEVCLASS_PROMPT, 0x03);
     EXPECT_EQ(RCP_DEVCLASS_ANGLED_ACTUATOR, 0x04);
     EXPECT_EQ(RCP_DEVCLASS_MOTOR, 0x05);
+    EXPECT_EQ(RCP_DEVCLASS_DISCRETE_ACTUATOR, 0x06);
     EXPECT_EQ(RCP_DEVCLASS_CUSTOM, 0x80);
     EXPECT_EQ(RCP_DEVCLASS_AM_PRESSURE, 0x90);
     EXPECT_EQ(RCP_DEVCLASS_TEMPERATURE, 0x91);
@@ -477,6 +487,31 @@ TEST_F(RCPMotors, MotorRead) {
 
     RCP::yield();
     CHECK_ONEFLOAT(RCP_DEVCLASS_MOTOR, 1, HPI2);
+}
+
+TEST_F(RCPDiscreteActuator, DARead) {
+    DACT[0] = 0x42;
+    DACT[1] = 0x11;
+
+    PUSH(0x01, RCP_DEVCLASS_DISCRETE_ACTUATOR, 0);
+    PUSH(0x01, RCP_DEVCLASS_DISCRETE_ACTUATOR, 1);
+
+    RCP::yield();
+    CHECK_OUTBUF(0x06, RCP_DEVCLASS_DISCRETE_ACTUATOR, 0, 0, 0, 0, 0, 0x42);
+
+    RCP::yield();
+    CHECK_OUTBUF(0x06, RCP_DEVCLASS_DISCRETE_ACTUATOR, 0, 0, 0, 0, 1, 0x11);
+}
+
+TEST_F(RCPDiscreteActuator, DAWrite) {
+    PUSH(0x02, RCP_DEVCLASS_DISCRETE_ACTUATOR, 3, 0x22);
+    PUSH(0x02, RCP_DEVCLASS_DISCRETE_ACTUATOR, 55, 0x45);
+
+    RCP::yield();
+    RCP::yield();
+
+    EXPECT_EQ(DACT[3], 0x22);
+    EXPECT_EQ(DACT[55], 0x45);
 }
 
 TEST_F(RCPAngledActuator, AngledActuatorsRead) {

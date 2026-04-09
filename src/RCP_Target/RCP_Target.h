@@ -29,6 +29,7 @@ typedef enum {
     RCP_DEVCLASS_PROMPT = 0x03,
     RCP_DEVCLASS_ANGLED_ACTUATOR = 0x04,
     RCP_DEVCLASS_MOTOR = 0x05,
+    RCP_DEVCLASS_DISCRETE_ACTUATOR = 0x06,
     RCP_DEVCLASS_CUSTOM = 0x80,
 
     RCP_DEVCLASS_AM_PRESSURE = 0x90,
@@ -177,9 +178,13 @@ namespace RCP {
     Floats2 writeStepper(uint8_t id, RCP_StepperControlMode controlMode, float controlVal);
     float writeMotor(uint8_t id, float value);
     float writeAngledActuator(uint8_t id, float controlVal);
+    uint8_t writeDiscreteActuator(uint8_t id, uint8_t state);
 
     RCP_SimpleActuatorState readSimpleActuator(uint8_t id);
     RCP_SimpleActuatorState simpleActuatorWrite_CLBK(uint8_t id, RCP_SimpleActuatorState state);
+
+    uint8_t readDiscreteActuator(uint8_t id);
+    uint8_t discreteActuatorWrite_CLBK(uint8_t id, uint8_t state);
 
     Floats2 readStepper(uint8_t id);
     Floats2 stepperWrite_CLBK(uint8_t id, RCP_StepperControlMode controlMode, float controlVal);

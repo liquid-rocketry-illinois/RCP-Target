@@ -76,6 +76,16 @@ namespace RCP {
         write(pkt, 8);
     }
 
+    static void sendDiscreteActuatorState(uint8_t id, uint8_t state) {
+        uint8_t pkt[8];
+        pkt[0] = channel | 0x06;
+        pkt[1] = RCP_DEVCLASS_DISCRETE_ACTUATOR;
+        insertTimestamp(pkt + 2);
+        pkt[6] = id;
+        pkt[7] = state;
+        write(pkt, 8);
+    }
+
     // The majority of RCP related functions
     void yield() {
         if(!initDone) return;
@@ -216,6 +226,13 @@ namespace RCP {
                     memcpy(&val, bytes + 3, 4);
                     writeMotor(bytes[2], val);
                 }
+
+                break;
+            }
+
+            case RCP_DEVCLASS_DISCRETE_ACTUATOR: {
+                if(pktlen == 1) sendDiscreteActuatorState(bytes[2], readDiscreteActuator(bytes[2]));
+                else writeDiscreteActuator(bytes[2], bytes[3]);
 
                 break;
             }
@@ -482,6 +499,12 @@ namespace RCP {
         return newstate;
     }
 
+    uint8_t writeDiscreteActuator(uint8_t id, uint8_t state) {
+        uint8_t newstate = discreteActuatorWrite_CLBK(id, state);
+        if(!writeUpdatesPaused) sendDiscreteActuatorState(id, newstate);
+        return newstate;
+    }
+
     [[gnu::weak]] RCP_SimpleActuatorState readSimpleActuator([[maybe_unused]] uint8_t id) {
         return RCP_SIMPLE_ACTUATOR_OFF;
     }
@@ -489,6 +512,12 @@ namespace RCP {
     [[gnu::weak]] RCP_SimpleActuatorState simpleActuatorWrite_CLBK([[maybe_unused]] uint8_t id,
                                                                    [[maybe_unused]] RCP_SimpleActuatorState state) {
         return RCP_SIMPLE_ACTUATOR_OFF;
+    }
+
+    [[gnu::weak]] uint8_t readDiscreteActuator([[maybe_unused]] uint8_t id) { return 0; }
+
+    [[gnu::weak]] uint8_t discreteActuatorWrite_CLBK([[maybe_unused]] uint8_t id, [[maybe_unused]] uint8_t state) {
+        return 0;
     }
 
     [[gnu::weak]] Floats2 readStepper([[maybe_unused]] uint8_t id) { return {}; }
@@ -499,13 +528,9 @@ namespace RCP {
         return {};
     }
 
-    [[gnu::weak]] float readMotor([[maybe_unused]] uint8_t id) {
-        return 0;
-    }
+    [[gnu::weak]] float readMotor([[maybe_unused]] uint8_t id) { return 0; }
 
-    [[gnu::weak]] float motorWrite_CLBK([[maybe_unused]] uint8_t id, [[maybe_unused]] float value) {
-        return 0;
-    }
+    [[gnu::weak]] float motorWrite_CLBK([[maybe_unused]] uint8_t id, [[maybe_unused]] float value) { return 0; }
 
     [[gnu::weak]] float readAngledActuator([[maybe_unused]] uint8_t id) { return 0; }
 

@@ -58,6 +58,14 @@ public:
     RCP_SimpleActuatorState actuators[256] = { RCP_SIMPLE_ACTUATOR_OFF };
 };
 
+class RCPDiscreteActuator : public RCPTest {
+protected:
+    ~RCPDiscreteActuator() override = default;
+
+public:
+    uint8_t acts[256];
+};
+
 class RCPSteppers : public RCPTest {
 protected:
     ~RCPSteppers() override = default;
@@ -119,6 +127,7 @@ public:
 #define RAWLEN dynamic_cast<RCPRawData*>(context)->length
 #define PROMPT dynamic_cast<RCPPromptTest*>(context)->data
 #define SENSEB dynamic_cast<RCPBoolSensor*>(context)->sensor
+#define DACT dynamic_cast<RCPDiscreteActuator*>(context)->acts
 #define HELLOHEX 0x48, 0x45, 0x4C, 0x4C, 0x4F
 
 #define PI 3.1415925f
