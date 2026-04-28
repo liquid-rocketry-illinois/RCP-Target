@@ -139,7 +139,7 @@ namespace RCP {
 
     void sendTestState();
     void startProcedure(uint8_t id);
-    [[noreturn]] void ESTOP();
+    void ESTOP();
     void RCPWriteSerialString(const char* str);
 
     void setReady(bool newready);

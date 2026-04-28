@@ -329,7 +329,13 @@ namespace RCP {
 
     void runTest() {
         if(testState != RCP_TEST_RUNNING) return;
-        Test::Procedure* test = Test::getTests()[testNum];
+        Test::Procedure* test = nullptr;
+
+        if(testState == RCP_TEST_RUNNING) test = Test::getTests()[testNum];
+        else {
+            if(ESTOP_PROC == nullptr) return;
+            test = ESTOP_PROC;
+        }
 
         if(firstTestRun) {
             test->initialize();
@@ -369,17 +375,11 @@ namespace RCP {
         firstTestRun = true;
     }
 
-    [[noreturn]] void ESTOP() {
+    void ESTOP() {
         if(testState == RCP_TEST_RUNNING || testState == RCP_TEST_PAUSED) Test::getTests()[testNum]->end(true);
         testState = RCP_TEST_ESTOP;
         sendTestState();
-        if(ESTOP_PROC) {
-            ESTOP_PROC->initialize();
-            while(!ESTOP_PROC->isFinished()) ESTOP_PROC->execute();
-            ESTOP_PROC->end(false);
-        }
-
-        while(true) {}
+        firstTestRun = true;
     }
 
     void RCPWriteSerialString(const char* str) {
