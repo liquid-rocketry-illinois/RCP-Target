@@ -104,9 +104,12 @@ namespace RCP {
         inbuffer.peek(head, 0);
         uint8_t pktlen = head & (~RCP_CHANNEL_MASK);
 
-        // RCP::RCPWriteSerialString((String(head) + " " + String(inbuffer.size()) + "\n").c_str());
         // If the packet length is zero, this indicates an ESTOP condition. Do that immediately.
-        if(pktlen == 0) ESTOP();
+        if(pktlen == 0) {
+            ESTOP();
+            inbuffer.pop(pktlen);
+            return;
+        }
 
         // If the buffer contains all the bytes for a packet, read it in to the
         // array bytes
