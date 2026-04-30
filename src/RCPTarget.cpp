@@ -328,7 +328,7 @@ namespace RCP {
     }
 
     void runTest() {
-        if(testState != RCP_TEST_RUNNING) return;
+        if(testState != RCP_TEST_RUNNING && testState != RCP_TEST_ESTOP) return;
         Test::Procedure* test = nullptr;
 
         if(testState == RCP_TEST_RUNNING) test = Test::getTests()[testNum];
