@@ -262,7 +262,9 @@ namespace RCP {
             case RCP_DEVCLASS_PRESSURE_TRANSDUCER:
             case RCP_DEVCLASS_RELATIVE_HYGROMETER:
             case RCP_DEVCLASS_FLOW_METER:
-            case RCP_DEVCLASS_LOAD_CELL: {
+            case RCP_DEVCLASS_LOAD_CELL:
+            case RCP_DEVCLASS_ALTITUDE:
+            case RCP_DEVCLASS_RADIO_STRENGTH: {
                 if(pktlen == 1) {
                     sendOneFloat(devclass, bytes[2], readSensor(devclass, bytes[2]).vals[0]);
                 }
@@ -294,7 +296,8 @@ namespace RCP {
 
             case RCP_DEVCLASS_ACCELEROMETER:
             case RCP_DEVCLASS_GYROSCOPE:
-            case RCP_DEVCLASS_MAGNETOMETER: {
+            case RCP_DEVCLASS_MAGNETOMETER:
+            case RCP_DEVCLASS_RPY: {
                 if(pktlen == 1) {
                     sendThreeFloat(devclass, bytes[2], readSensor(devclass, bytes[2]).vals);
                 }
@@ -309,7 +312,8 @@ namespace RCP {
                 break;
             }
 
-            case RCP_DEVCLASS_GPS: {
+            case RCP_DEVCLASS_GPS:
+            case RCP_DEVCLASS_QUATERNION: {
                 if(pktlen == 1) {
                     sendFourFloat(devclass, bytes[2], readSensor(devclass, bytes[2]).vals);
                 }
