@@ -150,7 +150,7 @@ namespace RCP {
                         else if(testState == RCP_TEST_PAUSED) testState = RCP_TEST_RUNNING;
                         break;
 
-                    default:
+                        default:
                         break;
                     }
 
@@ -246,14 +246,7 @@ namespace RCP {
 
 
             case RCP_DEVCLASS_BOOL_SENSOR: {
-                bool resval = readBoolSensor(bytes[2]);
-                uint8_t data[8];
-                data[0] = channel | 0x06;
-                data[1] = RCP_DEVCLASS_BOOL_SENSOR;
-                insertTimestamp(data + 2);
-                data[6] = bytes[2];
-                data[7] = resval ? 0x80 : 0x00;
-                write(data, 8);
+                forceSendBoolSensorState(bytes[2]);
                 break;
             }
 
@@ -475,6 +468,21 @@ namespace RCP {
         data[6] = id;
         memcpy(data + 7, value, 16);
         write(data, 23);
+    }
+
+    void forceSendSimpleActuatorState(uint8_t id) {
+        sendSimpleActuatorState(id, readSimpleActuator(id));
+    }
+
+    void forceSendBoolSensorState(uint8_t id) {
+        bool resval = readBoolSensor(id);
+        uint8_t data[8];
+        data[0] = channel | 0x06;
+        data[1] = RCP_DEVCLASS_BOOL_SENSOR;
+        insertTimestamp(data + 2);
+        data[6] = id;
+        data[7] = resval ? 0x80 : 0x00;
+        write(data, 8);
     }
 
     [[gnu::weak]] void write([[maybe_unused]] const void* data, [[maybe_unused]] uint8_t length) {}

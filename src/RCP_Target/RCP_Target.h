@@ -173,6 +173,9 @@ namespace RCP {
         sendFourFloat(devclass, id, floats.vals);
     }
 
+    void forceSendSimpleActuatorState(uint8_t id);
+    void forceSendBoolSensorState(uint8_t id);
+
     void write(const void* data, uint8_t length);
     uint8_t readAvail();
     uint8_t read();
