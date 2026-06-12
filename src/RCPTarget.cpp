@@ -420,7 +420,9 @@ namespace RCP {
         write(pkt, 3);
     }
 
-    bool getDataStreaming() { return dataStreaming; }
+    bool getDataStreaming() {
+        return dataStreaming;
+    }
 
     uint8_t getTestNum() { return testNum; }
 
