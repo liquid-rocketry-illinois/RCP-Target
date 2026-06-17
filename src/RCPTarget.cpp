@@ -96,7 +96,8 @@ namespace RCP {
             inbuffer.push(val);
         }
 
-        if(heartbeatTime != 0 && millis() - lastHeartbeatReceived > heartbeatTime) ESTOP();
+        if(heartbeatTime != 0 && millis() - lastHeartbeatReceived > heartbeatTime)
+            ESTOP();
 
         // Calculate the packet length from the header available in the buffer
         if(inbuffer.isEmpty()) return;
