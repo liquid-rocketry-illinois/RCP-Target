@@ -66,16 +66,6 @@ namespace RCP {
         writeUpdatesPaused = false;
     }
 
-    static void sendSimpleActuatorState(uint8_t id, RCP_SimpleActuatorState state) {
-        uint8_t pkt[8];
-        pkt[0] = channel | 0x06;
-        pkt[1] = RCP_DEVCLASS_SIMPLE_ACTUATOR;
-        insertTimestamp(pkt + 2);
-        pkt[6] = id;
-        pkt[7] = state ? RCP_SIMPLE_ACTUATOR_ON : RCP_SIMPLE_ACTUATOR_OFF;
-        write(pkt, 8);
-    }
-
     static void sendDiscreteActuatorState(uint8_t id, uint8_t state) {
         uint8_t pkt[8];
         pkt[0] = channel | 0x06;
@@ -193,9 +183,9 @@ namespace RCP {
                 break;
             }
 
-            case RCP_DEVCLASS_SIMPLE_ACTUATOR: {
-                if(pktlen == 1) sendSimpleActuatorState(bytes[2], readSimpleActuator(bytes[2]));
-                else writeSimpleActuator(bytes[2], static_cast<RCP_SimpleActuatorState>(bytes[3]));
+            case RCP_DEVCLASS_DISCRETE_ACTUATOR: {
+                if(pktlen == 1) sendDiscreteActuatorState(bytes[2], readDiscreteActuator(bytes[2]));
+                else writeDiscreteActuator(bytes[2], bytes[3]);
                 break;
             }
 
@@ -232,18 +222,6 @@ namespace RCP {
 
                 break;
             }
-
-            case RCP_DEVCLASS_DISCRETE_ACTUATOR: {
-                if(pktlen == 1) sendDiscreteActuatorState(bytes[2], readDiscreteActuator(bytes[2]));
-                else writeDiscreteActuator(bytes[2], bytes[3]);
-
-                break;
-            }
-
-            case RCP_DEVCLASS_CUSTOM:
-                handleCustomData(bytes + 2, pktlen);
-                break;
-
 
             case RCP_DEVCLASS_BOOL_SENSOR: {
                 forceSendBoolSensorState(bytes[2]);
@@ -321,6 +299,9 @@ namespace RCP {
                 break;
             }
 
+            // We should not be receiving packets of these types from the host
+            case RCP_DEVCLASS_TARGET_LOG:
+            case RCP_DEVCLASS_AMALGAMATE:
             default:
                 break;
             }
@@ -387,7 +368,7 @@ namespace RCP {
         if(len > 63) return;
         uint8_t data[65] = {0};
         data[0] = channel | len;
-        data[1] = RCP_DEVCLASS_CUSTOM;
+        data[1] = RCP_DEVCLASS_TARGET_LOG;
         memcpy(data + 2, str, len);
         write(data, len + 2);
     }
@@ -470,8 +451,8 @@ namespace RCP {
         write(data, 23);
     }
 
-    void forceSendSimpleActuatorState(uint8_t id) {
-        sendSimpleActuatorState(id, readSimpleActuator(id));
+    void forceSendDiscreteActuatorState(uint8_t id) {
+        sendDiscreteActuatorState(id, readDiscreteActuator(id));
     }
 
     void forceSendBoolSensorState(uint8_t id) {
@@ -489,12 +470,6 @@ namespace RCP {
     [[gnu::weak]] uint8_t readAvail() { return 0; }
     [[gnu::weak]] uint8_t read() { return 0; }
     [[gnu::weak]] uint32_t systime() { return 0; }
-
-    RCP_SimpleActuatorState writeSimpleActuator(uint8_t id, RCP_SimpleActuatorState state) {
-        RCP_SimpleActuatorState newstate = simpleActuatorWrite_CLBK(id, state);
-        if(!writeUpdatesPaused) sendSimpleActuatorState(id, newstate);
-        return newstate;
-    }
 
     Floats2 writeStepper(uint8_t id, RCP_StepperControlMode controlMode, float controlVal) {
         Floats2 newstate = stepperWrite_CLBK(id, controlMode, controlVal);
@@ -518,15 +493,6 @@ namespace RCP {
         uint8_t newstate = discreteActuatorWrite_CLBK(id, state);
         if(!writeUpdatesPaused) sendDiscreteActuatorState(id, newstate);
         return newstate;
-    }
-
-    [[gnu::weak]] RCP_SimpleActuatorState readSimpleActuator([[maybe_unused]] uint8_t id) {
-        return RCP_SIMPLE_ACTUATOR_OFF;
-    }
-
-    [[gnu::weak]] RCP_SimpleActuatorState simpleActuatorWrite_CLBK([[maybe_unused]] uint8_t id,
-                                                                   [[maybe_unused]] RCP_SimpleActuatorState state) {
-        return RCP_SIMPLE_ACTUATOR_OFF;
     }
 
     [[gnu::weak]] uint8_t readDiscreteActuator([[maybe_unused]] uint8_t id) { return 0; }

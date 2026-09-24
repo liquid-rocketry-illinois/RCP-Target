@@ -24,13 +24,12 @@ typedef enum {
 
 typedef enum {
     RCP_DEVCLASS_TEST_STATE = 0x00,
-    RCP_DEVCLASS_SIMPLE_ACTUATOR = 0x01,
+    RCP_DEVCLASS_DISCRETE_ACTUATOR = 0x01,
     RCP_DEVCLASS_STEPPER = 0x02,
     RCP_DEVCLASS_PROMPT = 0x03,
     RCP_DEVCLASS_ANGLED_ACTUATOR = 0x04,
     RCP_DEVCLASS_MOTOR = 0x05,
-    RCP_DEVCLASS_DISCRETE_ACTUATOR = 0x06,
-    RCP_DEVCLASS_CUSTOM = 0x80,
+    RCP_DEVCLASS_TARGET_LOG = 0x80,
 
     RCP_DEVCLASS_AM_PRESSURE = 0x90,
     RCP_DEVCLASS_TEMPERATURE = 0x91,
@@ -51,6 +50,8 @@ typedef enum {
 
     RCP_DEVCLASS_GPS = 0xC0,
     RCP_DEVCLASS_QUATERNION = 0xC1,
+
+    RCP_DEVCLASS_AMALGAMATE = 0xFF
 } RCP_DeviceClass;
 
 typedef enum {
@@ -75,12 +76,6 @@ typedef enum {
     RCP_DATA_STREAM_MASK = 0x80,
     RCP_HEARTBEAT_TIME_MASK = 0x0F,
 } RCP_TestRunningState;
-
-typedef enum {
-    RCP_SIMPLE_ACTUATOR_OFF = 0x00,
-    RCP_SIMPLE_ACTUATOR_ON = 0x80,
-    RCP_SIMPLE_ACTUATOR_TOGGLE = 0xC0,
-} RCP_SimpleActuatorState;
 
 typedef enum {
     RCP_STEPPER_ABSOLUTE_POS_CONTROL = 0x40,
@@ -173,7 +168,7 @@ namespace RCP {
         sendFourFloat(devclass, id, floats.vals);
     }
 
-    void forceSendSimpleActuatorState(uint8_t id);
+    void forceSendDiscreteActuatorState(uint8_t id);
     void forceSendBoolSensorState(uint8_t id);
 
     void write(const void* data, uint8_t length);
@@ -181,14 +176,10 @@ namespace RCP {
     uint8_t read();
     uint32_t systime();
 
-    RCP_SimpleActuatorState writeSimpleActuator(uint8_t id, RCP_SimpleActuatorState state);
     Floats2 writeStepper(uint8_t id, RCP_StepperControlMode controlMode, float controlVal);
     float writeMotor(uint8_t id, float value);
     float writeAngledActuator(uint8_t id, float controlVal);
     uint8_t writeDiscreteActuator(uint8_t id, uint8_t state);
-
-    RCP_SimpleActuatorState readSimpleActuator(uint8_t id);
-    RCP_SimpleActuatorState simpleActuatorWrite_CLBK(uint8_t id, RCP_SimpleActuatorState state);
 
     uint8_t readDiscreteActuator(uint8_t id);
     uint8_t discreteActuatorWrite_CLBK(uint8_t id, uint8_t state);

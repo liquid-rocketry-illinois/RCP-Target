@@ -50,14 +50,6 @@ public:
     RCP::PromptData data;
 };
 
-class RCPSimpleActuators : public RCPTest {
-protected:
-    ~RCPSimpleActuators() override = default;
-
-public:
-    RCP_SimpleActuatorState actuators[256] = { RCP_SIMPLE_ACTUATOR_OFF };
-};
-
 class RCPDiscreteActuator : public RCPTest {
 protected:
     ~RCPDiscreteActuator() override = default;
@@ -118,7 +110,7 @@ public:
 #define IN context->inbuf
 #define OUT context->outbuf
 #define SYSTIME context->systime
-#define ACTS dynamic_cast<RCPSimpleActuators*>(context)->actuators
+#define ACTS dynamic_cast<RCPDiscreteActuator*>(context)->actuators
 #define STEPS dynamic_cast<RCPSteppers*>(context)->steppers
 #define MOTORS dynamic_cast<RCPMotors*>(context)->motors
 #define ANGACT dynamic_cast<RCPAngledActuator*>(context)->actuators
