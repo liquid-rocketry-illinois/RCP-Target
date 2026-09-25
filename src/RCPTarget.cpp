@@ -365,12 +365,13 @@ namespace RCP {
 
     void RCPWriteSerialString(const char* str) {
         uint8_t len = strlen(str);
-        if(len > 63) return;
+        if(len > 59) return;
         uint8_t data[65] = {0};
-        data[0] = channel | len;
+        data[0] = channel | (len + 4);
         data[1] = RCP_DEVCLASS_TARGET_LOG;
-        memcpy(data + 2, str, len);
-        write(data, len + 2);
+        insertTimestamp(data + 2);
+        memcpy(data + 6, str, len);
+        write(data, len + 6);
     }
 
     void setReady(bool newready) {

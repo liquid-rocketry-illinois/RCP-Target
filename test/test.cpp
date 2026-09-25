@@ -205,8 +205,9 @@ TEST_F(RCPTest, MillisOffset) {
 }
 
 TEST_F(RCPTest, StringWrite) {
+    SYSTIME = 0x000000FF;
     RCP::RCPWriteSerialString("HELLO");
-    CHECK_OUTBUF(0x05, RCP_DEVCLASS_TARGET_LOG, HELLOHEX);
+    CHECK_OUTBUF(0x09, RCP_DEVCLASS_TARGET_LOG, 0x00, 0x00, 0x00, 0xFF, HELLOHEX);
 }
 
 TEST_F(RCPTest, OneFloat) {
