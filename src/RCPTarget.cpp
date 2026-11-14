@@ -120,7 +120,7 @@ namespace RCP {
                 switch(bytes[2] & 0xF0) {
                 case 0x00:
                     if(testState != RCP_TEST_STOPPED) break;
-                    testNum = bytes[2] & 0x0F;
+                    testNum = bytes[3];
                     testState = RCP_TEST_RUNNING;
                     firstTestRun = true;
                     break;
@@ -140,7 +140,7 @@ namespace RCP {
                         else if(testState == RCP_TEST_PAUSED) testState = RCP_TEST_RUNNING;
                         break;
 
-                        default:
+                    default:
                         break;
                     }
 
@@ -342,12 +342,16 @@ namespace RCP {
     void unpauseWriteUpdates() { writeUpdatesPaused = false; }
 
     void sendTestState() {
-        uint8_t data[7] = {0};
-        data[0] = channel | 0x05;
+        bool testRunning = testState == RCP_TEST_RUNNING;
+        uint8_t data[10] = {0};
+        data[0] = channel | (testRunning ? 0x08 : 0x05);
         data[1] = 0x00;
         insertTimestamp(data + 2);
-        data[6] = testState | heartbeatTime | (dataStreaming ? 0x80 : 0x00) | (ready ? 0x10 : 0x00);
-        write(data, 7);
+        data[6] = (dataStreaming ? 0x80 : 0x00) | testState | (ready ? 0x10 : 0x00);
+        data[7] = heartbeatTime;
+        data[8] = testNum;
+        data[9] = 0; // TODO: test progress updates
+        write(data, testRunning ? 10 : 7);
     }
 
     void startProcedure(uint8_t id) {
@@ -452,9 +456,7 @@ namespace RCP {
         write(data, 23);
     }
 
-    void forceSendDiscreteActuatorState(uint8_t id) {
-        sendDiscreteActuatorState(id, readDiscreteActuator(id));
-    }
+    void forceSendDiscreteActuatorState(uint8_t id) { sendDiscreteActuatorState(id, readDiscreteActuator(id)); }
 
     void forceSendBoolSensorState(uint8_t id) {
         bool resval = readBoolSensor(id);
